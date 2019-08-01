@@ -128,13 +128,17 @@ LaunchFlags如果是FLAG_ACTIVITY_CLEAR_TOP 或者 mLaunchSingleInstance 或者 
 ##### setTargetStackAndMoveToFrontIfNeeded
 负责找到目标stack，并且把对应的task从stack的中间一道stack栈的顶端
 
-#### setTaskFromIntentActivity
+##### setTaskFromIntentActivity
 确定是否要新添加一个Activity实例到Task中，这里也就是ReuseActivity所在的Activity（ReuseActivity的具体作用是否就是用来保存一下Task），这个方法控制的关键变量mAddingToTask和mSourceRecord
-
 
 1. FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK的情况，ActivityStater会尝试清除task中的所有Activity
 2. (mLaunchFlags & FLAG_ACTIVITY_CLEAR_TOP) != 0 || mLaunchSingleInstance || mLaunchSingleTask，感觉这步重复了，之前已经判断过，为什么这里还要进行一次clearTop的操作?这里是为了确定Activity在不存在的情况下可以添加新的Activity到Task中
 3. mStartActivity.realActivity.equals(intentActivity.getTask().realActivity) 顶部Acitivty和待启动的一致 && (mLaunchFlags & FLAG_ACTIVITY_SINGLE_TOP) != 0 || mLaunchSingleTop 启动模式为SingleTop，此时直接回调onNewIntent
+
+##### 处理SingleTop的情况
+
+
+
 
 #### 数据结构:
 ##### ActivityRecord

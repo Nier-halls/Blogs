@@ -90,9 +90,10 @@ ActivityRecord              sourceRecord                发起startActivity的Ac
 
 
 #### ActivityStarter.startActivityUnchecked
+
 ##### computeLaunchingTaskFlags
 适配LaunchFlags
-* 在sourceActivity启动模式是SingleInstance的情况下 mLaunchFlags |= FLAG_ACTIVITY_NEW_TASK
+* 在sourceActivity启动模式是SingleInstance的情况下 mLaunchFlags |= FLAG_ACTIVITY_NEW_TASK，这里**确保SingleInstance中永远都只有一个Activity**
 * 待启动Activity启动模式是 SingleInstance或SingleTask 的情况下 mLaunchFlags |= FLAG_ACTIVITY_NEW_TASK
 ```
 注意点：
@@ -101,7 +102,7 @@ mStartActivity.isResolverActivity() || mStartActivity.noDisplay >>> false
 ```
 
 ##### computeSourceStack
-确定待启动Activity的stack，sourceActivity不为null且没有finish，和sourceActivity同stack
+确定待启动Activity的stack，sourceActivity不为null且没有finish，那么待启动Activity就和sourceActivity同stack
 
 ##### getReusableIntentActivity
 作用:暂时还不明白，是为了确定startActivity的task吗？
@@ -109,15 +110,31 @@ mStartActivity.isResolverActivity() || mStartActivity.noDisplay >>> false
 逻辑:在Activity的launchMode是 NEW_TASK 或 singleTask 或 singleInstance 的前提下
 方法寻找了3类ActivityRecord并且返回，否则返回null
 
-1. launchMode = singleInstance, 找到包名类名和待启动Activity完全一致的ActivityRecord(全局范围ActivityRecord.intent.component == startActivity.intent.component)
+1. launchMode = singleInstance, 找到包名类名和待启动Activity完全一致的ActivityRecord(全局范围ActivityRecord.intent.component == startActivity.intent.component，这里查找非常严格，因此singleInstance必定单独在一个Task中，如果不存在这个Task就会在后面创建)
 2. 在分屏的情况下(暂时忽略)
 3. launchMode = NEW_TASK 或 singleTask, 返回符合以下条件的Task.topActivity:
     * 寻找taskIntent.component和startActivity完全一致的task
     * 寻找affinityIntent.component和startActivity完全一致的task(不太理解affinityIntent的含义)
     * 寻找rootAffinity(Task底部Activity的affinity)和startActivity.affinity一致的Task并且是位于最底部的Task 
 
+##### 确定Task栈
+
+如果获取的reusedActivity不为null，意味着已经为确定了待启动Activity的Task栈了(mStartActivity.setTask(reusedActivity.getTask()))
+
+##### ClearTop
+
+LaunchFlags如果是FLAG_ACTIVITY_CLEAR_TOP 或者 mLaunchSingleInstance 或者 mLaunchSingleTask（在当前情况因为reusedActivity不为null，因此LaunchFlags必定有NEW_TASK或SingleInstance、SingleTask）则寻找是否在Task中存在待启动Activity的instance，如果有则destory上面的Activity，并且如果存在待启动Acitivity会deliverNewIntentLocked回调onNewIntent
+
+##### setTargetStackAndMoveToFrontIfNeeded
+负责找到目标stack，并且把对应的task从stack的中间一道stack栈的顶端
+
+#### setTaskFromIntentActivity
+确定是否要新添加一个Activity实例到Task中，这里也就是ReuseActivity所在的Activity（ReuseActivity的具体作用是否就是用来保存一下Task），这个方法控制的关键变量mAddingToTask和mSourceRecord
 
 
+1. FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK的情况，ActivityStater会尝试清除task中的所有Activity
+2. (mLaunchFlags & FLAG_ACTIVITY_CLEAR_TOP) != 0 || mLaunchSingleInstance || mLaunchSingleTask，感觉这步重复了，之前已经判断过，为什么这里还要进行一次clearTop的操作?这里是为了确定Activity在不存在的情况下可以添加新的Activity到Task中
+3. mStartActivity.realActivity.equals(intentActivity.getTask().realActivity) 顶部Acitivty和待启动的一致 && (mLaunchFlags & FLAG_ACTIVITY_SINGLE_TOP) != 0 || mLaunchSingleTop 启动模式为SingleTop，此时直接回调onNewIntent
 
 #### 数据结构:
 ##### ActivityRecord
@@ -130,6 +147,9 @@ mStartActivity.isResolverActivity() || mStartActivity.noDisplay >>> false
     task.intent:创建task的Activity对应的intent
     task.rootAffinity:启动Task的activity的affinity,一般不指定的情况下默认是包名
     task.mTaskHistory:task中保存的所有ActivityRecord，新启Activity排在后面
+    task.realActivity:启动task的activity.cmp
+
+    activityRecord.launchMode.LAUNCH_MULTIPLE:就是Manifest中的普通启动模式standard
     
 ```
 
@@ -141,3 +161,5 @@ mStartActivity.isResolverActivity() || mStartActivity.noDisplay >>> false
 4. 整理整个ActivityThread和ActivityManagerService直接的交互逻辑
 5. 思考如何整理一个文档，能够高效的回忆起startActivity的所有逻辑，以什么样的形式来整理归纳
 6. ActivityTask和ActivityStack的含义以及区别
+7. Activity.task是什么时候被置为null的，onDestroy整个流程AMS是否是同步执行的
+8. 并不是singleTask或NEW_TASK就一定会新启动栈，singleInstance一定会新启动栈

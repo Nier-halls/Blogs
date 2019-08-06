@@ -192,8 +192,21 @@ ActivityRecord[] outActivity //缓存结果的ActivityRecord数组
 
 这里最需要注意的就是mLaunchxxx这几个启动模式的情况以及局部变量和参数的映射关系。
 
+
+```
+    private void sendNewTaskResultRequestIfNeeded() {
+        final ActivityStack sourceStack = mStartActivity.resultTo != null
+                ? mStartActivity.resultTo.getStack() : null;
+        if (sourceStack != null && (mLaunchFlags & FLAG_ACTIVITY_NEW_TASK) != 0) {
+            sourceStack.sendActivityResultLocked(-1 /* callingUid */, mStartActivity.resultTo,
+                    mStartActivity.resultWho, mStartActivity.requestCode, RESULT_CANCELED,
+                    null /* data */);
+            mStartActivity.resultTo = null;
+        }
+    }
+```
 关于`sendNewTaskResultRequestIfNeeded`方法，当待启动Activity的flags包含`FLAG_ACTIVITY_NEW_TASK`，此时会直接回调给启动者（接收回调）的Activity一个空结果。
-注释说明在一个标记`FLAG_ACTIVITY_NEW_TASK`的启动情况下，启动者Activity不应该请求待启动Activity返回结果回调.此时会有一个奇怪的现象，启动者Activity被迅速回调生命周期的onResume -> onPause -> onResume -> onPause。
+注释说明在一个标记`Intent.FLAG_ACTIVITY_NEW_TASK`的启动情况下，**启动者Activity不应该请求待启动Activity返回结果回调**.此时会有一个奇怪的现象，启动者Activity被迅速回调生命周期的onResume -> onPause -> onResume -> onPause。而且此时`mStartActivity.resultTo`被置为null，可以看出只要设置了`Intent.FLAG_ACTIVITY_NEW_TASK`标志`mStartActivity.resultTo`就会被置为null;(根据先后顺序后面singleTask和singleInstance也会被加上`Intent.FLAG_ACTIVITY_NEW_TASK`但是mStartActivity.resultTo却为null，当然一般情况下非startActivityForResult启动resultTo都为null)
 
 
 ## computeLaunchingTaskFlags 预配置FLAG_ACTIVITY_NEW_TASK
@@ -260,9 +273,9 @@ singleInstance 和 singleTask两种启动模式启动的Activity会尝试在所�
 ```
 方法主要是寻找待启动Activity的目标stack，一般由`Activity.startActivity()`启动的Activity默认情况下都会被放在启动者所在的stack中。
 
-至此方法的初始化工作基本已经完成，接下来是开始判断待启动Activity所应该被放置的Task
+至此方法的**初始化**基本已经完成，接下来是开始判断待启动Activity所应该被放置的Task
 
-## getReusableIntentActivity 
+## getReusableIntentActivity 确定新Activity的Task栈
 ```
     private ActivityRecord getReusableIntentActivity() {
 
@@ -308,10 +321,10 @@ singleInstance 和 singleTask两种启动模式启动的Activity会尝试在所�
 
 在找到一个合适的Task后会以`ActivityRecord`的形式来返回。这里寻找Task却返回`ActivityRecord`是因为后面的操作光靠`TaskRecord`还是无法确定的，还需要`ActivityRecord`中的部分信息配合才能决定新Activity的启动行为；
 
-（注：这里处理可能是在找到的Task中去启动一个新的Activity也有可能只是将Task移到前台后什么都不处理。）
+（注：这里处理可能是在找到的Task中去启动一个新的Activity也有可能只是将Task移到前台。）
 
-#### 1.SingleInstance启动模式
-##### 1.1 ActivityStackSupervisor.findActivityLocked
+### 1.SingleInstance启动模式
+#### 1.1 ActivityStackSupervisor.findActivityLocked
 ```
     ActivityRecord findActivityLocked(Intent intent, ActivityInfo info,
                                       boolean compareIntentFilters) {
@@ -332,7 +345,7 @@ singleInstance 和 singleTask两种启动模式启动的Activity会尝试在所�
 ```
 遍历所有的Stack栈并且调用`ActivityStack.findActivityLocked`来寻找合适的
 
-##### 1.2 ActivityStack.findActivityLocked
+#### 1.2 ActivityStack.findActivityLocked
 ```
     ActivityRecord findActivityLocked(Intent intent, ActivityInfo info, boolean compareIntentFilters) {
         
@@ -378,12 +391,12 @@ singleInstance 和 singleTask两种启动模式启动的Activity会尝试在所�
 
 （注：`r.intent.getComponent().equals(cls) `比较的是包名和类名 ` mPackage.equals(other.mPackage) && mClass.equals(other.mClass);`）
 
-#### 2.FLAG_ACTIVITY_LAUNCH_ADJACENT分屏
+### 2.FLAG_ACTIVITY_LAUNCH_ADJACENT分屏
 略
 
-#### 3.SingleTask启动模式 或 FLAG_ACTIVITY_NEW_TASK
+### 3.SingleTask启动模式 或 FLAG_ACTIVITY_NEW_TASK
 
-##### 3.1 ActivityStackSupervisor.findTaskLocked
+#### 3.1 ActivityStackSupervisor.findTaskLocked
 ```
     ActivityRecord findTaskLocked(ActivityRecord r, int displayId) {
         mTmpFindTaskResult.r = null;
@@ -464,30 +477,206 @@ singleInstance 和 singleTask两种启动模式启动的Activity会尝试在所�
     }
 ```
 三个概念
-* taskIntent：标记了是哪个intent在启动Activity时创建的task,一般不会发生改变，即使这个Activity后面destroy了也不会。
+* taskIntent：标记了是哪个intent在启动Activity时创建的task,一般不会改变，即使这个Activity后面destroy了也不会变。
 * affinityIntent：在Task栈发生reset时，Activity被分配到一个新的Task栈时会被设置上，和taskIntent基本一致。基本可以理解为创建Activity时被设置的intent
-* rootAffinity：Task在setIntent过程中读取到affinity后第一次被设置(从null到有的过程)，以后被设置就不再会改动。最初的affinity，可以说这个Task的affinity曾经被设置过rootAffinity过
+* rootAffinity：Task在setIntent过程中读取到affinity后第一次被设置(从null到有的过程,这里其实就是构造的时候)，以后被设置intent就不再会改动rootAffinity。
 
 这里从Stack中的所有Task开始遍历，分三种情况
 
 1. taskIntent.getComponent和待启动的Activit一致（包名和类名均一致），这个时候就直接返回`getTopActivity()`最顶部的Activity。可以理解成曾经这个Task就是由当前待启动的Activiy创建的
 2. affinityIntent.getComponent和待启动的Activit一致（包名和类名均一致），这个时候就直接返回`getTopActivity()`最顶部的Activity。和1的情况差不多
-3. taskAffinity在某些情况下会被设置intent，第一次被设置的intent的Affinity和当前待启动的一致，则先缓存起来，在其它的Stack中继续遍历，看看有没有满足情况1和情况2的Task，如果没有就返回3中找到的顶部Activity。（继续遍历的逻辑在上层调用方法，判断matchedByRootAffinity标志）
+3. taskAffinity在某些情况下会被设置intent，第一次被设置的intent的Affinity和当前待启动的一致，则先缓存起来，在其它的Stack中继续遍历，看看有没有满足**情况1**和**情况2**的Task，如果没有就返回3中找到的顶部Activity。（继续遍历的逻辑在当前方法的上层执行方法，通过判断matchedByRootAffinity标志来确定是否继续遍历）可以看出匹配Manifest中配置的taskAffinity的优先级是最低的！
 
-#### 总结
-`getReusableIntentActivity`获取一下几种Activity
-1. SingleInstance的情况下，应用中已启动且和待启动Activity相同类型的Activity
-2. SingleTask或者NEW_TASK的情况下，Task.topActivity, 且此Task的启动时Activity和待启动Acitvity相同
+### getReusableIntentActivity 总结
+* **SingleInstance：** 遍历所有Stack栈，在所有栈中寻找**同应用，同包名，同类名**的Activity返回，SingleInstance作用域覆盖整个App甚至包括多进程的App。
 
-其余情况都会返回null
+* **SingleTask 和 FLAG_ACTIVITY_NEW_TASK：** 在确定栈的时候**优先匹配Task的创建者（Activity），其次匹配Mainifest中配置的TaskAffinity**,该类Activity曾经创建了这个Task，则在启动同类型Activity时会优先考虑放置在该task中。
 
+* 方法返回的一律都是Task.getTopActivity
 
-## 思考
+## ReusedActivity
 ```
+if (reusedActivity != null) {
+            // 设置待启动Activity的task字段
+            if (mStartActivity.getTask() == null) {
+                mStartActivity.setTask(reusedActivity.getTask());
+            }
+
+            // 处理FLAG_ACTIVITY_CLEAR_TOP标志
+            if ((mLaunchFlags & FLAG_ACTIVITY_CLEAR_TOP) != 0
+                    || isDocumentLaunchesIntoExisting(mLaunchFlags)
+                    || mLaunchSingleInstance || mLaunchSingleTask) {
+                final TaskRecord task = reusedActivity.getTask();
+
+                final ActivityRecord top = task.performClearTaskForReuseLocked(mStartActivity,
+                        mLaunchFlags);
+
+                if (reusedActivity.getTask() == null) {
+                    reusedActivity.setTask(task);
+                }
+
+                if (top != null) {
+                    if (top.frontOfTask) {
+                        top.getTask().setIntent(mStartActivity);
+                    }
+                    ActivityStack.logStartActivity(AM_NEW_INTENT, mStartActivity, top.getTask());
+                    top.deliverNewIntentLocked(mCallingUid, mStartActivity.intent,
+                            mStartActivity.launchedFromPackage);
+                }
+            }
+
+            // 将对应的task和stack移动到前台，top front
+            reusedActivity = setTargetStackAndMoveToFrontIfNeeded(reusedActivity);
+
+            // 判断是否需创建一个Activity来加入到Task中  (是否只移栈)
+            setTaskFromIntentActivity(reusedActivity);
+
+            // 判断不需要新加入Activity实例到栈中
+            if (!mAddingToTask && mReuseTask == null) {
+                resumeTargetStackIfNeeded();
+                if (outActivity != null && outActivity.length > 0) {
+                    outActivity[0] = reusedActivity;
+                }
+                return START_TASK_TO_FRONT;
+            }
+        }
+```
+在获取到ReusedActivity后总共做了以下几件事：
+1. 为待启动Activity设置上ReusedActivity.task，意味着待启动Activity的目标栈就是ReusedActivity所在栈。因此`getReusableIntentActivity`方法可以理解为替新Activity寻找栈；
+2. 处理FLAG_ACTIVITY_CLEAR_TOP标志，如果新的待启动Activity在目标task中已经存在一个实例，这个时候就需要清除该实例顶部的所有Activity；
+   1. 在清除时（performClearTaskForReuseLocked），如果是standard模式（也就是标记了FLAG_ACTIVITY_NEW_TASK）此时会将自己也清除
+   2. 清除完成后会回调一次`onNewIntent`
+3. 将对应新Activity所在的Task栈移到Stack的最前面
+4. 判断是否需要创建新Activity实例加入到目标Task栈中
+
+### setTaskFromIntentActivity 确定是否新增Activity实例到Task中
+```
+    private void setTaskFromIntentActivity(ActivityRecord intentActivity) {
+        if ((mLaunchFlags & (FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK))
+                == (FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_CLEAR_TASK)) {
+            final TaskRecord task = intentActivity.getTask();
+            task.performClearTaskLocked();
+            mReuseTask = task;
+            mReuseTask.setIntent(mStartActivity);
+
+            mMovedOtherTask = true;
+        } 
+
+        //检查是否具备ClearTop的效果
+        else if ((mLaunchFlags & FLAG_ACTIVITY_CLEAR_TOP) != 0
+                || mLaunchSingleInstance || mLaunchSingleTask) {
+            ActivityRecord top = intentActivity.getTask().performClearTaskLocked(mStartActivity,
+                    mLaunchFlags);
+
+            //检查是否存在待启动Activity        
+            if (top == null) {
+                //如果不存在待启动Activity,则这个时候准备好在ReusedActivity中创建一个新的Activity
+                mAddingToTask = true;
+                mStartActivity.setTask(null);
+                mSourceRecord = intentActivity;
+                final TaskRecord task = mSourceRecord.getTask();
+                if (task != null && task.getStack() == null) {
+                    mTargetStack = computeStackFocus(mSourceRecord, false /* newTask */,
+                            null /* bounds */, mLaunchFlags, mOptions);
+                    mTargetStack.addTask(task,
+                            !mLaunchTaskBehind /* toTop */, "startActivityUnchecked");
+                }
+            }
+        } 
+
+        // 在ReusedActivity和待启动Activity一致的情况，并且位于Task顶部（TopActivity）
+        else if (mStartActivity.realActivity.equals(intentActivity.getTask().realActivity)) {
+
+            // 如果intent标记了FLAG_ACTIVITY_SINGLE_TOP，此时回调onNewIntent给ReusedActivity
+            if (((mLaunchFlags & FLAG_ACTIVITY_SINGLE_TOP) != 0 || mLaunchSingleTop)
+                    && intentActivity.realActivity.equals(mStartActivity.realActivity)) {
+
+                if (intentActivity.frontOfTask) {
+                    intentActivity.getTask().setIntent(mStartActivity);
+                }
+                intentActivity.deliverNewIntentLocked(mCallingUid, mStartActivity.intent,
+                        mStartActivity.launchedFromPackage);
+            }
+           
+            // 如果没有SingleTop标志位的情况下，两者虽然是同一个Activity但是intentFilter不同
+            else if (!intentActivity.getTask().isSameIntentFilter(mStartActivity)) {
+                // 这个时候会重新启动Activity，安全性考虑？
+                mAddingToTask = true;
+                mSourceRecord = intentActivity;
+            }
+        } else if ((mLaunchFlags & FLAG_ACTIVITY_RESET_TASK_IF_NEEDED) == 0) {
+            mAddingToTask = true;
+            mSourceRecord = intentActivity;
+        } else if (!intentActivity.getTask().rootWasReset) {
+            intentActivity.getTask().setIntent(mStartActivity);
+        }
+    }
+```
+此方法主要是用来确定是否需要新创建一个Activity实例加入到栈中；
+
+具体有以下几种情况需要新启动：
+1. 在NEW_TASK + CLEAR_TOP的情况下，或者 singleTask、singleInstance的启动模式
+   1. 如果目标栈中本身没有待启动Activity，则新加入Activity实例。（此时执行`performClearTaskLocked`其实并不是为了真正去清除顶部其它Activity，只是为了确定待启动Activity是否存在于目标栈中）*
+   2. 如果目标栈中存在待启动Activity，则什么都不做（因为之前外层已经回调给已经存的Activity实例一次onNewIntent了）
+
+2. ReusedActivity（目标Task的topActivity）**目标Task的realActivity也就是创建Tasks时的Activity**和待启动Activity一致（这里比较的不是reusedActivity 和 mStartActivity 需要注意！）
+   1. 待启动Activity是SingleTop的启动模式，这个时候只是回调一次onNewIntent
+   2. 如果不是SingleTop，则判断如果IntentFilter相同则什么都不做，如果不同则新加入Activity实例 *
+   
+3. 其它情况大部分是需要新加入Activity实例的（暂时忽略）
+
+**重点，此方法所作的逻辑都是为了确定`mAddingToTask`的值。`mAddingToTask`代表是否需要新加入Activity实例**
+
+
+```
+if (reusedActivity != null) {
+        
+        ...
+
+        // 判断是否需创建一个Activity来加入到Task中  (是否只移栈)
+        setTaskFromIntentActivity(reusedActivity);
+
+        // 判断不需要新加入Activity实例到栈中
+        if (!mAddingToTask && mReuseTask == null) {
+            resumeTargetStackIfNeeded();
+            if (outActivity != null && outActivity.length > 0) {
+                outActivity[0] = reusedActivity;
+            }
+            return START_TASK_TO_FRONT;
+        }
+    }
+```
+从上述代码可以发现，要发生只移栈不新添加Activity只要保证**mAddingToTask**变量为false就可以了（当然前提是`reusedActivity != null`）。
+
+可以总结出几种只移栈的情况：
+1. rootActivity(创建Task的Activity) 和 mStartActivity(待启动Activity)一致 && ( Task.topActivity和mStartActivity不一致 || `(mLaunchFlags & FLAG_ACTIVITY_SINGLE_TOP) == 0 `)
+2. FLAG_ACTIVITY_NEW_TASK + FLAG_ACTIVITY_CLEAR_TOP 或 SingleTask 或 SingleInstance 并且reusedActivity.task中存在startActivity实例
+
+情况1比较难理解，一般现象是栈被拉起来了，但是目标Activity却没有展示在前台
+情况2则是基本的ClearTop操作执行以后会将顶部Activity出栈，将startActivity展示在前台
+
+```
+**思考, 此时的stack堆栈信息以及顶部的Activity (此时mAddingToTask是false)
+
 [ActivityA] startActivity [ActivityB + Intent.FLAG_ACTIVITY_NEW_TASK + affinity]
 [ActivityB] startActivity [ActivityC]
 [ActivityB] finish
 [ActivityC] startActivity [ActivityA + Intent.FLAG_ACTIVITY_NEW_TASK]
 [ActivityA] startActivity [ActivityB + Intent.FLAG_ACTIVITY_NEW_TASK + affinity]
-此时的stack堆栈信息以及顶部的Activity
+
 ```
+
+## 阶段总结
+1. computeLaunchingTaskFlags：统一添加FLAG_ACTIVITY_NEW_TASK标志
+   * mSourceActivity的启动模式为SingleInstance 
+   * mStartActivity的启动模式为SingleTask和SingleInstance
+
+2. getReusableIntentActivity：寻找mStartActivity的目标Task（返回目标Task的topActivity）
+   * **SingleInstance：** 遍历所有Stack栈，在所有栈中寻找**同应用，同包名，同类名**的Activity返回
+   * **SingleTask 和 FLAG_ACTIVITY_NEW_TASK：** 优先匹配Task的创建者（Activity），其次匹配Mainifest中配置的TaskAffinity
+
+3. 处理ClearTop的情况
+4. 移动目标Task到Stack顶部
+5. 判断是否新建Activity实例，不需要新建则结束
+
+注意点：SingleInstance作用域为应用而非进程，特殊情况会导致只移栈而看不到启动的Activity，NEW_TASK的含义是尝试去寻找一个合适的栈（可能是新栈也可能和启动者同栈）

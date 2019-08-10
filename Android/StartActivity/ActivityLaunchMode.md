@@ -323,13 +323,8 @@ singleInstance 和 singleTask两种启动模式启动的Activity会尝试在所�
 
 （注：这里处理可能是在找到的Task中去启动一个新的Activity也有可能只是将Task移到前台。）
 
-<<<<<<< HEAD
-#### 1. SingleInstance启动模式
-##### 1.1 ActivityStackSupervisor.findActivityLocked
-=======
 ### 1.SingleInstance启动模式
 #### 1.1 ActivityStackSupervisor.findActivityLocked
->>>>>>> bcb0992c30bbeed0e7553cfa455a909e301173cf
 ```
     ActivityRecord findActivityLocked(Intent intent, ActivityInfo info,
                                       boolean compareIntentFilters) {
@@ -396,17 +391,10 @@ singleInstance 和 singleTask两种启动模式启动的Activity会尝试在所�
 
 （注：`r.intent.getComponent().equals(cls) `比较的是包名和类名 ` mPackage.equals(other.mPackage) && mClass.equals(other.mClass);`）
 
-<<<<<<< HEAD
-#### 2. FLAG_ACTIVITY_LAUNCH_ADJACENT分屏
-略
-
-#### 3. SingleTask启动模式 或 FLAG_ACTIVITY_NEW_TASK
-=======
 ### 2.FLAG_ACTIVITY_LAUNCH_ADJACENT分屏
 略
 
 ### 3.SingleTask启动模式 或 FLAG_ACTIVITY_NEW_TASK
->>>>>>> bcb0992c30bbeed0e7553cfa455a909e301173cf
 
 #### 3.1 ActivityStackSupervisor.findTaskLocked
 ```

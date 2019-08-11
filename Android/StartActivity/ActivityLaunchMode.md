@@ -679,4 +679,21 @@ if (reusedActivity != null) {
 4. 移动目标Task到Stack顶部
 5. setTaskFromIntentActivity：判断是否新建Activity实例，不需要新建则结束
 
-注意点：SingleInstance作用域为应用而非进程，特殊情况会导致只移栈而看不到启动的Activity，NEW_TASK的含义是尝试去寻找一个合适的栈（可能是新栈也可能和启动者同栈）
+## 注意点：
+#### 1.  SingleInstance的作用域
+SingleInstance作用域为应用而非进程，特殊情况会导致只移栈而看不到启动的Activity
+
+#### 2. FLAG_ACTIVITY_NEW_TASK标志位的含义
+NEW_TASK的含义是尝试去寻找一个合适的栈（可能是新栈也可能和启动者同栈）
+
+#### 3. 何时会调用onNewIntent
+SingleTop、clearTop、SingleInstance、SingleTask生效（顶部是待启动Activity）的时候才会回调onNewIntent
+
+#### 4. ClearTop何时会清除包括带启动Activity实例重新创建？
+设置来ClearTop并且默认启动模式，会destroyed自己（如果存在的话），并且此时不会创建onNewIntent
+
+#### 5. 默认TaskAffinity
+默认TaskAffinity是跟随Application标签设置的，如果没有设置默认就是包名
+
+#### 6. ActivityStak的含义
+未解决，只知道是保存Activity的

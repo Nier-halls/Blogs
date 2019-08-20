@@ -12,7 +12,7 @@
 
 
 
-## 0. ViewGroup事件分发
+## 0. ViewGroup事件分发伪代码
 ```
 public boolean dispatchTouchEvent(MotionEvent ev) {
     boolean handle;
@@ -44,8 +44,6 @@ public boolean dispatchTouchEvent(MotionEvent ev) {
                 intercepted = false;
             }
         } else {
-            // There are no touch targets and this action is not an initial down
-            // so this view group continues to intercept touches.
             intercepted = true;
         }
 ```
@@ -58,7 +56,7 @@ public boolean dispatchTouchEvent(MotionEvent ev) {
 1. actionMasked == MotionEvent.ACTION_DOWN：代表分发流程到开始，初次分发
 2. mFirstTouchTarget != null：代表非初次分发，且非ViewGroup自己处理到情况
 
-拦截的关键是必须**在分发到流程中**
+上述两个条件都是为了保证在事件分发的过程你各种功能，因此可知拦截的关键就是**必须在分发到流程中**
 
 #### 条件一：TouchTarget != null + MotionEvent.ACTION_DOWN
 ```
@@ -167,7 +165,7 @@ public boolean dispatchTouchEvent(MotionEvent ev) {
                     }
 
                     if (dispatchTransformedTouchEvent(ev, false, child, idBitsToAssign)) {
-                        //事件被child处理来
+                        //事件被child处理了
                         //保存本次处理事件的child到mTouchTarget变量中
                         newTouchTarget = addTouchTarget(child, idBitsToAssign);
                         alreadyDispatchedToNewTouchTarget = true;
@@ -255,10 +253,6 @@ public boolean dispatchTouchEvent(MotionEvent ev) {
 2. 调用`dispatchTransformedTouchEvent`递归分发事件
 
 结论：
-1. child只有处理来ActionDown才有可能接收后续event
+1. child只有处理了ActionDown才有可能接收后续event
 2. 一个事件只能被一个child消耗，即使在拦截的时候
-3. 当View处理来ActionDown就能持续获取后续事件，哪怕后续事件它不处理，mTouchTarget是会一致保存着
-
-
-### 2.3 总结
-拦截的两个条件都是和TouchTarget相关的，前提都是TouchTarget的存在（ActionDown不知道会不会有TouchTarget所以也一并判断）且TouchTarget允许拦截（未设置FLAG_DISALLOW_INTERCEPT）。
+3. 当View处理了ActionDown就能持续获取后续事件，哪怕后续事件它不处理，mTouchTarget是会一致保存着

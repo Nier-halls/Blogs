@@ -44,9 +44,9 @@ Activity的启动流程涉及到IPC跨进程通讯，主要关联Application所�
 2. **如何确定一个Activity在Application端和AMS端的映射关系？**
 3. **Stack和Task的概念，它们有什么区别？**
 4. **整个启动过程中Activity的生命周期是如何发生变化的，是否有序？**
-5. **为什么StartActivity的过程需要以C/S的形式来实现**
+5. **为什么StartActivity的过程需要以C/S的形式来实现？**
 
-根据上述问题以及流程图来分析StartActivity的源码
+围绕上述问题和流程图来继续分析StartActivity的源码
 
 ## 3. 源码分析(API-27)
 StartActivity的源码流程可以总结为5步：
@@ -166,7 +166,6 @@ Android中所有Activity都归Stack(间接)管理，主要是为了实现Activit
 
 ##### Stack ActivityStack
 ActivityStack保证Activity先进先出（FIFO）的顺序的基础上以Task为单位来管理Activity。
-因此ActivityStack并非是直接管理Activity的。
 
 ```com.android.server.am.ActivityStack
 // [CODE]com.android.server.am.ActivityStarter
@@ -191,7 +190,7 @@ Task在Android中是直接管理Activity的容器，Task秉承Activity先进先�
 
 Activity在被压入Task时虽然遵循FIFO原则但并非只是一个一个压入一个一个弹出，根据Activity不同的启动模式（LaunchMode）可以定制Activity在Task中的行为，如单例（SingTask），单例单栈（SingInstance）等。
 
-任何一个Activity都会被放置在一个Task中，默认放置在启动者相同的栈中。
+Activity不能脱离Task存在，任何一个Activity都会被放置在一个Task中，默认放置在启动者相同的栈中。
 
 ##### Task & Stack & Activity 关系
 ![StartActivit](./pic/start_activity2.png)
@@ -204,7 +203,7 @@ Activity在被压入Task时虽然遵循FIFO原则但并非只是一个一个压�
  ActivityStack利用Task这一个中间层管理Acitivty带来了跟多的灵活性，Activity并非只能死板的先进先出，而是可以以任务组Task的形式来切换任意一组的Task（以及Task包含的Activity）到前台或者后台。
 
 #### 3.3.2 寻找新Activity的位置
-单独整理在LaunchMode篇
+单独整理在《LaunchMode篇》
 
 #### 3.3.3 压入目标栈
 ```
@@ -244,10 +243,155 @@ Activity在入栈时一般会有三种可能：
 
 最后都会将新启动的Activity压入到Task的顶部（特定情况除外）
 
-
-
 ### 3.4 启动前准备
-#### Pause当前显示的Activity
+#### 3.4.1 AMS通知Application去Pause当前正在显示的Activity
+经过之前步骤AMS已经完成了如下准备工作：
+1. 配合PackageManagerService解析startActivity的请求发送的intent
+2. 根据解析结果创建了待启动Activity的ActivityRecord
+3. 将新Activity入栈，插入到对应的Task顶部
+
+接下来的工作就是Paued当前正在显示的Activity，为新Activity的展示做准备
+```
+// [CODE]com.android.server.am.ActivityStarter
+private int startActivityUnchecked(final ActivityRecord r, ActivityRecord sourceRecord,  boolean doResume, TaskRecord inTask ...) {
+    ...
+    if (mDoResume) {
+        ...
+        mSupervisor.resumeFocusedStackTopActivityLocked(mTargetStack, mStartActivity,
+                mOptions);
+    }
+}
+```
+```
+    private boolean resumeTopActivityInnerLocked(ActivityRecord prev, ActivityOptions options) {
+        ...
+        boolean pausing = mStackSupervisor.pauseBackStacks(userLeaving, next, false);
+        // mResumedActivity表示当前栈中正在显示的Activity
+        if (mResumedActivity != null) {
+            pausing |= startPausingLocked(userLeaving, false, next, false);
+        }
+        //resumeWhilePausing标志代表启动Activity的时候等前一个Pause以后才正式开始启动
+        //默认一般都是false
+        if (pausing && !resumeWhilePausing) {
+            return true;
+        }
+    }  
+
+         */
+    final boolean startPausingLocked(boolean userLeaving, boolean uiSleeping,
+            ActivityRecord resuming, boolean pauseImmediately) {
+        ...
+
+        //获取栈中正在显示的Activity        
+        ActivityRecord prev = mResumedActivity;
+
+        if (prev.app != null && prev.app.thread != null) {
+                //调用正在显示的Activity执行schedulePauseActivity
+                prev.app.thread.schedulePauseActivity(prev.appToken, prev.finishing,
+                        userLeaving, prev.configChangeFlags, pauseImmediately);
+        } 
+```
+AMS判断当前是否有Acitvity正在显示，如果有正在显示的Activity则会取出Application对应的IApplicationThread远程接口告诉Application进程去Pause那个正在显示的Activity。
+
+IApplicationThread专门用于接收AMS分配的任务是一个Binder对象，可以理解为IApplicationThread是一个进程开放给AMS的回调接口。AMS在处理Activity的过程中如要launch，pause，stop Activity都需要通过这个接口来告诉Application执行相应的操作。
+
+#### 3.4.2 Activity唯一标志——Token
+之前AMS调用IApplicationThread.schedulePauseActivity时有一个关键的参数`prev.appToken`也就是ActivityRecord.appToken,它是一个Activity的唯一标识，它的作用是告诉Application进程具体需要Pause哪个Activity。ActivityRecord创建时也创建了Token，并且Token内部同时也持有着ActivityRecord的弱引用
+```
+   // [CODE]android.app.ActivityThread
+   static class Token extends IApplicationToken.Stub {
+        private final WeakReference<ActivityRecord> weakActivity;
+
+        Token(ActivityRecord activity) {
+            weakActivity = new WeakReference<>(activity);
+        }
+
+        private static ActivityRecord tokenToActivityRecordLocked(Token token) {
+            if (token == null) {
+                return null;
+            }
+            ActivityRecord r = token.weakActivity.get();
+            if (r == null || r.getStack() == null) {
+                return null;
+            }
+            return r;
+        }
+    }
+```
+在Application进程ActivityThread(专门用于处理IApplicationThread接收到的AMS回调的类)中同时存在一份关于Token的映射Map
+```
+// [CODE]android.app.ActivityThread
+public final class ActivityThread {
+    final ArrayMap<IBinder, ActivityClientRecord> mActivities = new ArrayMap<>();
+}
+```
+而一般获取一个由AMS指定的Activity一般是如下形式：
+```
+ ActivityClientRecord r = mActivities.get(token);
+ if (r != null) {
+     Activity activity =  r.activity
+ }
+```
+
+从上面可以知道这个Token可以说是关联Application进程和AMS进程的桥梁。
+
+![StartActivit](./pic/start_activity3.png)
+
+**思考：跨进程如何确保每次传过来的Binder对象的唯一性,从Parcelable读取Binder对象的方法去寻找答案**
+
+#### 3.4.2 finishPause
+```
+final H mH = new H();
+
+ private class ApplicationThread extends IApplicationThread.Stub {
+
+        public final void schedulePauseActivity(IBinder token, boolean finished,
+        boolean userLeaving, int configChanges, boolean dontReport) {
+            ...
+
+        sendMessage(
+                finished ? H.PAUSE_ACTIVITY_FINISHING : H.PAUSE_ACTIVITY,
+                token,
+                (userLeaving ? USER_LEAVING : 0) | (dontReport ? DONT_REPORT : 0),
+                configChanges,
+                seq);
+ }
+
+ private class H extends Handler {
+     public void handleMessage(Message msg) {
+        switch (msg.what) {
+            ...
+            case PAUSE_ACTIVITY: {
+                handlePauseActivity((IBinder) args.arg1, false,
+                        (args.argi1 & USER_LEAVING) != 0, args.argi2,
+                        (args.argi1 & DONT_REPORT) != 0, args.argi3);
+           } break;
+
+     }
+
+
+```
+此时来到Application所在的进程ApplicationThread接收到了AMS的schedulePauseActivity回调后会想H发送一个消息，而H就是一个主线程的Handler，切换到主线程后执行真正的Pause操作。
+
+```
+    private void handlePauseActivity(IBinder token, boolean finished,
+            boolean userLeaving, int configChanges, boolean dontReport, int seq) {
+        //根据token找到指定的Activity
+        ActivityClientRecord r = mActivities.get(token);
+
+        if (r != null) {
+            //方法去调用Activity的onPause回调
+            performPauseActivity(token, finished, r.isPreHoneycomb(), "handlePauseActivity");
+
+            //dontReport对应AMS调用schedulePauseActivity时的参数pauseImmediately也就是false
+            if (!dontReport) {
+                //告诉AMS对应的Activity已经Paused结束了
+                ActivityManager.getService().activityPaused(token);
+            }
+        }
+    }
+
+```
 
 
 ### 3.5 启动新Activity

@@ -23,7 +23,6 @@
 > 
 > * 总结
 > 
-> * TODO：分析过程一定要**精简**，控制篇幅，整个流程只要能足够自己回忆起全部内容就可以了，**抓住主线**
 
 ## 0. 前言
 整理这篇文章的目的是在回顾时可以通过文章提到的主干流程回忆扩展完整的只是结构，分析过程会比较**精简**，只要能够帮助自己复盘即可。
@@ -92,7 +91,7 @@ StartActivity的源码流程可以总结为5步：
         return null;
     }
 ```
-Activity执行startActivity方法最终会跨进程调用ActivityManagerService的startActivity，作为参数的intent中包含着Application需要启动的所有Activity。此过程Application的任务就是组装参数，并且跨进程发起请求。
+Activity执行startActivity方法最终会跨进程调用ActivityManagerService的startActivity，作为参数的intent中包含着Application需要启动的Activity的信息。此过程Application的任务就是组装参数（intent），并且跨进程发起请求。
 
 ### 3.2 AMS创建ActivityRecord
 #### 3.2.1 解析Intent中的参数
@@ -134,7 +133,7 @@ AMS会调用PackageManagerService来解析Intent中的数据，其中包括带�
     }
 ```
 
-Activity类是作为Application端也就是Client端展现的形式，而对应在AMS中Activity则是以ActivityRecord的形式展现，ActivityRecord可以理解为Application中Activity的映射。
+Activity类是作为Application端也就是Client端展现的形式，而对应在AMS中Activity则是以ActivityRecord类的形式展现，ActivityRecord可以理解为Application中Activity的映射。
 
 Application中的Activity和AMS中的ActivityRecord是一一对应的关系。
 
@@ -186,7 +185,7 @@ ActivityRecord findActivityLocked(Intent intent, ActivityInfo info,
 上面是一个ActivityStack类中的其中一个查找Activity的方法，从方法中可以看出ActivityStack想要找到指定的Activity需要先遍历Stack中的所有Task（ActivityStack.mTaskHistory）,然后再从栈中获取所有Activity（TaskRecord.mActivities）。从上述方法可以看出ActivityStack在管理Activity的形式并非是直接管理的。
 
 ##### Task TaskRecor
-Task在Android中是直接管理Activity的容器，Task秉承Activity先进先出的顺序，是ActivityStack的具体细节体现。
+Task在Android中是直接管理Activity的容器，Task秉承Activity先进先出的顺序，是ActivityStack的具体细节体现。TaskRecor则是描述Task抽象概念的一个具体实现类。
 
 Activity在被压入Task时虽然遵循FIFO原则但并非只是一个一个压入一个一个弹出，根据Activity不同的启动模式（LaunchMode）可以定制Activity在Task中的行为，如单例（SingTask），单例单栈（SingInstance）等。
 
@@ -296,44 +295,63 @@ AMS判断当前是否有Acitvity正在显示，如果有正在显示的Activity�
 IApplicationThread专门用于接收AMS分配的任务是一个Binder对象，可以理解为IApplicationThread是一个进程开放给AMS的回调接口。AMS在处理Activity的过程中如要launch，pause，stop Activity都需要通过这个接口来告诉Application执行相应的操作。
 
 #### 3.4.2 Activity唯一标志——Token
-之前AMS调用IApplicationThread.schedulePauseActivity时有一个关键的参数`prev.appToken`也就是ActivityRecord.appToken,它是一个Activity的唯一标识，它的作用是告诉Application进程具体需要Pause哪个Activity。ActivityRecord创建时也创建了Token，并且Token内部同时也持有着ActivityRecord的弱引用
+之前AMS调用IApplicationThread.schedulePauseActivity时有一个关键的参数`prev.appToken`也就是ActivityRecord.appToken,它是Activity的唯一标识，它的作用是告诉Application进程具体需要Pause哪个Activity。
+
+Token是伴随着ActivityRecord创建时一同创建的，并且Token内部同时持有着ActivityRecord的弱引用
 ```
-   // [CODE]android.app.ActivityThread
-   static class Token extends IApplicationToken.Stub {
-        private final WeakReference<ActivityRecord> weakActivity;
+// [CODE]com.android.server.am.ActivityRecord
+ActivityRecord(ActivityManagerService _service, ProcessRecord _caller, int _launchedFromPid,
+        int _launchedFromUid, String _launchedFromPackage, Intent _intent, String _resolvedType,
+        ActivityInfo aInfo, Configuration _configuration,
+        ActivityRecord _resultTo, String _resultWho, int _reqCode,
+        boolean _componentSpecified, boolean _rootVoiceInteraction,
+        ActivityStackSupervisor supervisor, ActivityOptions options,
+        ActivityRecord sourceRecord) {
+    service = _service;
+    appToken = new Token(this);
+    ...
+}        
+```
+```
+// [CODE]android.app.ActivityThread
+static class Token extends IApplicationToken.Stub {
+    private final WeakReference<ActivityRecord> weakActivity;
 
-        Token(ActivityRecord activity) {
-            weakActivity = new WeakReference<>(activity);
-        }
-
-        private static ActivityRecord tokenToActivityRecordLocked(Token token) {
-            if (token == null) {
-                return null;
-            }
-            ActivityRecord r = token.weakActivity.get();
-            if (r == null || r.getStack() == null) {
-                return null;
-            }
-            return r;
-        }
+    Token(ActivityRecord activity) {
+        weakActivity = new WeakReference<>(activity);
     }
+
+    private static ActivityRecord tokenToActivityRecordLocked(Token token) {
+        if (token == null) {
+            return null;
+        }
+        ActivityRecord r = token.weakActivity.get();
+        if (r == null || r.getStack() == null) {
+            return null;
+        }
+        return r;
+    }
+}
 ```
 在Application进程ActivityThread(专门用于处理IApplicationThread接收到的AMS回调的类)中同时存在一份关于Token的映射Map
 ```
 // [CODE]android.app.ActivityThread
 public final class ActivityThread {
     final ArrayMap<IBinder, ActivityClientRecord> mActivities = new ArrayMap<>();
+    ...
 }
 ```
-而一般获取一个由AMS指定的Activity一般是如下形式：
+而一般Application进程获取一个由AMS指定的Activity一般是如下形式：
 ```
+//1.根据token获取对应的ActivityClientRecord
  ActivityClientRecord r = mActivities.get(token);
  if (r != null) {
+     //2.从ActivityClientRecord获取对应的Activity
      Activity activity =  r.activity
  }
 ```
 
-从上面可以知道这个Token可以说是关联Application进程和AMS进程的桥梁。
+从上面可以发现Token是关联Application进程和AMS进程的桥梁。
 
 ![StartActivit](./pic/start_activity3.png)
 
@@ -341,6 +359,7 @@ public final class ActivityThread {
 
 #### 3.4.2 finishPause
 ```
+// [CODE] android.app.ActivityThread
 final H mH = new H();
 
  private class ApplicationThread extends IApplicationThread.Stub {
@@ -374,6 +393,7 @@ final H mH = new H();
 此时来到Application所在的进程ApplicationThread接收到了AMS的schedulePauseActivity回调后会想H发送一个消息，而H就是一个主线程的Handler，切换到主线程后执行真正的Pause操作。
 
 ```
+    // [CODE] android.app.ActivityThread
     private void handlePauseActivity(IBinder token, boolean finished,
             boolean userLeaving, int configChanges, boolean dontReport, int seq) {
         //根据token找到指定的Activity
@@ -392,6 +412,172 @@ final H mH = new H();
     }
 
 ```
-
+在回调Activity的pause以后Pause流程结尾继续回调AMS`activityPaused()`，并将当前Pause的Activity对应token回传给AMS；
 
 ### 3.5 启动新Activity
+
+#### 3.5.1 通知AMS Pause结束
+在Application结束Activity Pause流程后回到AMS中
+```
+public class ActivityManagerService extends IActivityManager.Stub
+        implements Watchdog.Monitor, BatteryStatsImpl.BatteryCallback {
+
+    ...        
+    @Override
+    public final void activityPaused(IBinder token) {
+        ...
+        stack.activityPausedLocked(token, false);
+    }
+    ...
+}
+
+final void activityPausedLocked(IBinder token, boolean timeout) {
+    ...
+    final ActivityRecord r = isInStackLocked(token);
+    if (r != null) {
+        completePauseLocked(true /* resumeNext */, null /* resumingActivity */);
+    }    
+}
+
+private void completePauseLocked(boolean resumeNext, ActivityRecord resuming) {
+    ...
+    if (resumeNext) {
+        //重新开始启动顶部的Activity
+        mStackSupervisor.resumeFocusedStackTopActivityLocked();
+    }    
+}    
+```
+此时AMS会重新找到之前顶部的Activity,也就是之前放到Stack顶部的Task中的最上面的新Activity。
+
+#### 3.5.2 回调Application launch新Activity
+```
+private boolean resumeTopActivityInnerLocked(ActivityRecord prev, ActivityOptions options) {
+    ...
+    //获取待启动Activity
+    final ActivityRecord next = topRunningActivityLocked(true /* focusableOnly */);
+
+    //再检查一遍是否还有未Pause的Activity，一般情况下都已经Pause了
+    boolean pausing = mStackSupervisor.pauseBackStacks(userLeaving, next, false);
+    if (mResumedActivity != null) {
+        pausing |= startPausingLocked(userLeaving, false, next, false);
+    }
+
+    if (next.app != null && next.app.thread != null) {
+        ...
+    } else {
+        //准备启动新的Activity
+        mStackSupervisor.startSpecificActivityLocked(next, true, true);
+    }
+}    
+```
+
+    void startSpecificActivityLocked(ActivityRecord r,
+            boolean andResume, boolean checkConfig) {
+        //尝试获取Application对应的进程描述
+        ProcessRecord app = mService.getProcessRecordLocked(r.processName,
+                r.info.applicationInfo.uid, true);
+        if (app != null && app.thread != null) {
+                //获取到了则准备启动Activity
+                realStartActivityLocked(r, app, andResume, checkConfig);
+                return;
+        }
+        //未获取到，说明需要启动一个新的Application进程
+        mService.startProcessLocked(r.processName, r.info.applicationInfo, true, 0,
+                "activity", r.intent.getComponent(), false, false, true);
+    }
+
+此时重新检查一遍栈的状态，确保一切状态正常（此时假设Applicaiton已经是存在的），最后调用`realStartActivityLocked`去启动通知Applicaiton启动Activity。
+
+```
+final boolean realStartActivityLocked(ActivityRecord r, ProcessRecord app,
+            boolean andResume, boolean checkConfig) throws RemoteException {
+    ...
+    r.app = app;
+    //启动Activity
+    app.thread.scheduleLaunchActivity(new Intent(r.intent), r.appToken,
+                        System.identityHashCode(r), r.info,
+                        mergedConfiguration.getGlobalConfiguration(),
+                        mergedConfiguration.getOverrideConfiguration(), r.compat,
+                        r.launchedFromPackage, task.voiceInteractor, app.repProcState, r.icicle,
+                        r.persistentState, results, newIntents, !andResume,
+                        mService.isNextTransitionForward(), profilerInfo);
+    ...
+}
+```
+此时通过ApplicaitonThread的远程接口回调scheduleLaunchActivity并且将对应启动时的Intent和token等传给ApplcationThread；
+
+#### 3.5.3 Application launch新Activity
+```
+    private class ApplicationThread extends IApplicationThread.Stub { 
+        ...
+        @Override
+        public final void scheduleLaunchActivity(Intent intent, IBinder token, int ident,
+                ActivityInfo info, Configuration curConfig, Configuration overrideConfig,
+                CompatibilityInfo compatInfo, String referrer, IVoiceInteractor voiceInteractor,
+                int procState, Bundle state, PersistableBundle persistentState,
+                List<ResultInfo> pendingResults, List<ReferrerIntent> pendingNewIntents,
+                boolean notResumed, boolean isForward, ProfilerInfo profilerInfo) {
+            //创建一个新的Application端Activity的描述，记录Activity的基本信息，并且把token存下来
+            ActivityClientRecord r = new ActivityClientRecord();
+            r.token = token;
+            r.ident = ident;
+            r.intent = intent;
+            ...
+            sendMessage(H.LAUNCH_ACTIVITY, r);
+        }
+    }
+
+    private class H extends Handler {
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case LAUNCH_ACTIVITY: {
+                    final ActivityClientRecord r = (ActivityClientRecord) msg.obj;
+                    handleLaunchActivity(r, null, "LAUNCH_ACTIVITY");
+                } break;
+            }    
+        }
+    }
+
+    private void handleLaunchActivity(ActivityClientRecord r, Intent customIntent, String reason) {
+        
+        Activity a = performLaunchActivity(r, customIntent);
+
+        handleResumeActivity(r.token, false, r.isForward,
+                    !r.activity.mFinished && !r.startsNotResumed, r.lastProcessedSeq, reason);
+    }
+```
+Application端在接收到AMS的回调后会根据token创建一个新的ActivityClientRecord描述，并且通过Handler发送消息切换到主线程调用`performLaunchActivity()`方法去创建Activity。
+
+```
+private Activity performLaunchActivity(ActivityClientRecord r, Intent customIntent) {
+    //获取Activity对应的类名
+    ComponentName component = r.intent.getComponent();
+    ...
+    /**
+     * mInstrumentation.newActivity的实现就是通过反射创建Activity实例，如下
+     * (Activity)cl.loadClass(className).newInstance();
+     */ 
+    activity = mInstrumentation.newActivity(cl, component.getClassName(), r.intent);
+    ...
+    //回调Activity.onCreate方法
+    mInstrumentation.callActivityOnCreate(activity, r.state);
+    //回调Activity.onStart方法    
+    activity.performStart();
+    ...
+    //以token为key来缓存ActivityClientRecord描述
+    mActivities.put(r.token, r);
+}
+
+private void handleLaunchActivity(ActivityClientRecord r, Intent customIntent, String reason) {
+        
+        Activity a = performLaunchActivity(r, customIntent);
+        //执行Activity的Resume逻辑并且回调Activity的onResume方法
+        handleResumeActivity(r.token, false, r.isForward,
+                    !r.activity.mFinished && !r.startsNotResumed, r.lastProcessedSeq, reason);
+}
+```
+Activity通过Intent中记录的信息来反射创建Activity实例，创建完成后依次回调onCreate，onStart,onResume生命周期。
+
+最后在确保顺利创建完成后会将对应的`ActivityClientRecord`以Token为key缓存到`mActivities`中，确保下次AMS能够通知Application找到正确的Activity并执行对应方法。
+
+// todo加入一个流程图

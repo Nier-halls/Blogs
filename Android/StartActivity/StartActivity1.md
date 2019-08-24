@@ -594,8 +594,7 @@ Activity通过Intent中记录的信息来反射创建Activity实例，创建完�
 最后在确保顺利创建完成后会将对应的`ActivityClientRecord`以Token为key缓存到`mActivities`中，确保下次AMS能够通知Application找到正确的Activity并执行对应方法。
  
 ## 4. StartActivity流程图
-
-![StartActivit](./pic/start_activity5.png)
-
+流程图根据Android 27源码绘制
+![StartActivit](./pic/start_activity5w.png)
 
 ## 5. 总结StartActivity的架构

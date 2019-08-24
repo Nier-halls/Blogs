@@ -20,14 +20,15 @@
 >   6. Pause SourceActivity
 >   7. 创建启动StartingActivity
 >   8. Stop SourceActivity
-> 
+>
+> * StartActivity流程图
 > * 总结
 > 
 
 ## 0. 前言
 整理这篇文章的目的是在回顾时可以通过文章提到的主干流程回忆扩展完整的只是结构，分析过程会比较**精简**，只要能够帮助自己复盘即可。
 
-## 1. StartActivity流程图
+## 1. StartActivity逻辑图
 Activity的启动流程涉及到IPC跨进程通讯，主要关联Application所在进程以及AMS进程。交互流程图如下
 
 ![StartActivit](./pic/start_activity1.png)
@@ -592,4 +593,9 @@ Activity通过Intent中记录的信息来反射创建Activity实例，创建完�
 
 最后在确保顺利创建完成后会将对应的`ActivityClientRecord`以Token为key缓存到`mActivities`中，确保下次AMS能够通知Application找到正确的Activity并执行对应方法。
  
-// todo加入一个流程图,整体流程图
+## 4. StartActivity流程图
+
+![StartActivit](./pic/start_activity5.png)
+
+
+## 5. 总结StartActivity的架构

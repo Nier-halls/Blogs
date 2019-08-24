@@ -195,20 +195,23 @@ Activity不能脱离Task存在，任何一个Activity都会被放置在一个Tas
 ![StartActivit](./pic/start_activity2.png)
 
 关系：
-* Stack管理一系列Task
-* Task管理一系列Activity
+* Stack通过`mTaskHistory`管理Task
+* Task通过`mActivities`管理Activity
 * Task遵循FIFO，是Stack栈形式的体现
 
  ActivityStack利用Task这一个中间层管理Acitivty带来了跟多的灵活性，Activity并非只能死板的先进先出，而是可以以任务组Task的形式来切换任意一组的Task（以及Task包含的Activity）到前台或者后台。
 
 #### 3.3.2 寻找新Activity的位置
-单独整理在《LaunchMode篇》
+StartActivityUncheck单独整理在《LaunchMode篇》
 
 #### 3.3.3 压入目标栈
 ```
 // [CODE]com.android.server.am.ActivityStarter
-private int startActivityUnchecked(final ActivityRecord r, ActivityRecord sourceRecord,  boolean doResume, TaskRecord inTask ...) {
+
+private int startActivityUnchecked(final ActivityRecord r, ActivityRecord 
+                        sourceRecord,  boolean doResume, TaskRecord inTask ...) {
     ...
+    // mStartActivity待启动Activity，mSourceRecord启动者Activity（mSourceRecord严格上说并非是启动者，它可能会被替换）
     if (mStartActivity.resultTo == null && mInTask == null && !mAddingToTask
             && (mLaunchFlags & FLAG_ACTIVITY_NEW_TASK) != 0) {
         // 1.需要创建并加入到一个Task中     
@@ -216,7 +219,7 @@ private int startActivityUnchecked(final ActivityRecord r, ActivityRecord source
         result = setTaskFromReuseOrCreateNewTask(
                 taskToAffiliate, preferredLaunchStackId, topStack);
     } else if (mSourceRecord != null) {
-        // 2.加入到启动者相同的task（mSourceRecord严格上说并非是启动者，可能被替换）
+        // 2.加入到启动者相同的task
         result = setTaskFromSourceRecord();
     } else if (mInTask != null) {
         // 3.需要加入一个指定Task的情况    
@@ -240,28 +243,32 @@ Activity在入栈时一般会有三种可能：
 2. 加入到一个已有的Task栈(mSourceActivity.getTask())中，如普通启动时加入到当前启动者对应栈中，FLAG_ACTIVITY_NEW_TASK或者SingleTask等时寻找一个已经存在的合适的栈加入。
 3. 加入到一个指定的栈中，这种情况比较少
 
-最后都会将新启动的Activity压入到Task的顶部（特定情况除外）
+这里默认就按照最普通的情况，新Activity和启动者位于同一Task的情况来分析，在确定Task后最会将新启动的Activity（ActivityRecord）压入到Task的顶部（特定情况除外），也就是加入到mActivities列表的末尾。
 
 ### 3.4 启动前准备
 #### 3.4.1 AMS通知Application去Pause当前正在显示的Activity
-经过之前步骤AMS已经完成了如下准备工作：
+回顾一下之前AMS所作的工作：
 1. 配合PackageManagerService解析startActivity的请求发送的intent
 2. 根据解析结果创建了待启动Activity的ActivityRecord
 3. 将新Activity入栈，插入到对应的Task顶部
 
-接下来的工作就是Paued当前正在显示的Activity，为新Activity的展示做准备
+接下来的工作就是为启动新Activity做准备工作——Paued当前正在显示的Activity
 ```
-// [CODE]com.android.server.am.ActivityStarter
-private int startActivityUnchecked(final ActivityRecord r, ActivityRecord sourceRecord,  boolean doResume, TaskRecord inTask ...) {
-    ...
-    if (mDoResume) {
+    // [CODE]com.android.server.am.ActivityStarter
+
+    private int startActivityUnchecked(final ActivityRecord r, ActivityRecord 
+                            sourceRecord,  boolean doResume, TaskRecord inTask ...) {
         ...
-        mSupervisor.resumeFocusedStackTopActivityLocked(mTargetStack, mStartActivity,
-                mOptions);
+        if (mDoResume) {
+            ...
+            mSupervisor.resumeFocusedStackTopActivityLocked(mTargetStack, mStartActivity,
+                    mOptions);
+        }
     }
-}
 ```
 ```
+    // [CODE]com.android.server.am.ActivityStackSupervisor
+
     private boolean resumeTopActivityInnerLocked(ActivityRecord prev, ActivityOptions options) {
         ...
         boolean pausing = mStackSupervisor.pauseBackStacks(userLeaving, next, false);
@@ -269,14 +276,13 @@ private int startActivityUnchecked(final ActivityRecord r, ActivityRecord source
         if (mResumedActivity != null) {
             pausing |= startPausingLocked(userLeaving, false, next, false);
         }
-        //resumeWhilePausing标志代表启动Activity的时候等前一个Pause以后才正式开始启动
+        //resumeWhilePausing标志代表启动Activity的时候是否等前一个Pause以后才正式开始启动
         //默认一般都是false
         if (pausing && !resumeWhilePausing) {
             return true;
         }
     }  
-
-         */
+    
     final boolean startPausingLocked(boolean userLeaving, boolean uiSleeping,
             ActivityRecord resuming, boolean pauseImmediately) {
         ...
@@ -290,9 +296,15 @@ private int startActivityUnchecked(final ActivityRecord r, ActivityRecord source
                         userLeaving, prev.configChangeFlags, pauseImmediately);
         } 
 ```
-AMS判断当前是否有Acitvity正在显示，如果有正在显示的Activity则会取出Application对应的IApplicationThread远程接口告诉Application进程去Pause那个正在显示的Activity。
+AMS判断当前是否有Acitvity正在显示，如果有正在显示的Activity则会取出ActivityRecor的Application对应的IApplicationThread远程接口告诉Application进程去Pause那个正在显示的Activity。
 
 IApplicationThread专门用于接收AMS分配的任务是一个Binder对象，可以理解为IApplicationThread是一个进程开放给AMS的回调接口。AMS在处理Activity的过程中如要launch，pause，stop Activity都需要通过这个接口来告诉Application执行相应的操作。
+
+![StartActivit](./pic/start_activity4.png)
+
+如上图描述Application和AMS通讯的过程
+
+**思考：跨进程如何从Stub(BBinder)自动转为Stub.Proxy(BpBinder)的，底层怎么知道Stub对应的是哪个Stub.Proxy**
 
 #### 3.4.2 Activity唯一标志——Token
 之前AMS调用IApplicationThread.schedulePauseActivity时有一个关键的参数`prev.appToken`也就是ActivityRecord.appToken,它是Activity的唯一标识，它的作用是告诉Application进程具体需要Pause哪个Activity。
@@ -579,5 +591,5 @@ private void handleLaunchActivity(ActivityClientRecord r, Intent customIntent, S
 Activity通过Intent中记录的信息来反射创建Activity实例，创建完成后依次回调onCreate，onStart,onResume生命周期。
 
 最后在确保顺利创建完成后会将对应的`ActivityClientRecord`以Token为key缓存到`mActivities`中，确保下次AMS能够通知Application找到正确的Activity并执行对应方法。
-
-// todo加入一个流程图
+ 
+// todo加入一个流程图,整体流程图

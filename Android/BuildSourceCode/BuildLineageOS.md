@@ -248,7 +248,7 @@ ln -s /usr/local/bin/gsed /usr/local/bin/sed
 改为
 's/^\([0-9a-fA-F]*\) . VDSO_\([a-zA-Z0-9_]*\)$/\#define vdso_offset_\2  0x\1/p'
 ```
-**注意这里只是把\t换成“空格”文件内容可能不一样**，另外改完以后需要把输出目录的.h文件删除
+**注意这里只是把\t换成“空格”,其他不做改动**，另外改完以后需要把输出目录的.h文件删除
 ```
 rm -f /Volumes/Samsung_T5/Android/Lineage/lineageos15/out/target/product/mido/obj/KERNEL_OBJ/include/generated/vdso-offsets.h
 ```
@@ -332,5 +332,5 @@ Android studio 不停 scanning files to index
 
 Open module setting --> Modules --> 找到gen文件夹  --> 右键选择Resources
 
-
-备注：Linux没有任何问题，以上全是MAC编译的问题。如果想省心还是用ubuntu来编译源码吧。
+### 总结
+Linux没有任何问题，以上全是MAC编译的问题。如果想省心还是用ubuntu来编译源码吧。

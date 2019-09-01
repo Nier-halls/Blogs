@@ -15,6 +15,12 @@ repo abandon 分支名 [<project>…]
 ### 切换分支
 repo checkout <branchname>  [<project>…]
 
+### 显示manifest文件内容
+repo manifest
+
+### 查看本地repo管理的所有projects
+repo list
+
  ## Repo标签说明
 ```
 <remote name="github"
@@ -52,3 +58,6 @@ repo checkout <branchname>  [<project>…]
 #### default：代表project的默认配置
 属性和project的一致
 
+
+## todo
+Repo的分支是什么概念

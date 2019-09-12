@@ -1,0 +1,491 @@
+2019-09-04 18:31:09.715 18794-18794/? A/zygote: java_vm_ext.cc:534] JNI DETECTED ERROR IN APPLICATION: use of deleted local reference 0xb261ebf9
+2019-09-04 18:31:09.715 18794-18794/? A/zygote: java_vm_ext.cc:534]     from int com.nier.nlogger.Logger1.nativeInit(java.lang.String, java.lang.String, int, java.lang.String, java.lang.String)
+2019-09-04 18:31:09.715 18794-18794/? A/zygote: java_vm_ext.cc:534] "main" prio=5 tid=1 Runnable
+2019-09-04 18:31:09.715 18794-18794/? A/zygote: java_vm_ext.cc:534]   | group="main" sCount=0 dsCount=0 flags=0 obj=0x73bc5ef0 self=0xb2c5d000
+2019-09-04 18:31:09.715 18794-18794/? A/zygote: java_vm_ext.cc:534]   | sysTid=18794 nice=-10 cgrp=default sched=0/0 handle=0xb6ebb4a4
+2019-09-04 18:31:09.715 18794-18794/? A/zygote: java_vm_ext.cc:534]   | state=R schedstat=( 582955073 20507079 359 ) utm=55 stm=3 core=3 HZ=100
+2019-09-04 18:31:09.715 18794-18794/? A/zygote: java_vm_ext.cc:534]   | stack=0xbe2a0000-0xbe2a2000 stackSize=8MB
+2019-09-04 18:31:09.715 18794-18794/? A/zygote: java_vm_ext.cc:534]   | held mutexes= "mutator lock"(shared held)
+2019-09-04 18:31:09.715 18794-18794/? A/zygote: java_vm_ext.cc:534]   native: #00 pc 002e93d7  /system/lib/libart.so (art::DumpNativeStack(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, int, BacktraceMap*, char const*, art::ArtMethod*, void*)+130)
+2019-09-04 18:31:09.715 18794-18794/? A/zygote: java_vm_ext.cc:534]   native: #01 pc 0037ca91  /system/lib/libart.so (art::Thread::DumpStack(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, bool, BacktraceMap*, bool) const+204)
+2019-09-04 18:31:09.715 18794-18794/? A/zygote: java_vm_ext.cc:534]   native: #02 pc 00379133  /system/lib/libart.so (art::Thread::Dump(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, bool, BacktraceMap*, bool) const+34)
+2019-09-04 18:31:09.715 18794-18794/? A/zygote: java_vm_ext.cc:534]   native: #03 pc 0024df39  /system/lib/libart.so (art::JavaVMExt::JniAbort(char const*, char const*)+720)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   native: #04 pc 0024e31b  /system/lib/libart.so (art::JavaVMExt::JniAbortF(char const*, char const*, ...)+66)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   native: #05 pc 00380db9  /system/lib/libart.so (art::Thread::DecodeJObject(_jobject*) const+300)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   native: #06 pc 000d5949  /system/lib/libart.so (art::ScopedCheck::CheckInstance(art::ScopedObjectAccess&, art::ScopedCheck::InstanceKind, _jobject*, bool)+44)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   native: #07 pc 000d509d  /system/lib/libart.so (art::ScopedCheck::CheckPossibleHeapValue(art::ScopedObjectAccess&, char, art::JniValueType)+220)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   native: #08 pc 000d492d  /system/lib/libart.so (art::ScopedCheck::Check(art::ScopedObjectAccess&, bool, char const*, art::JniValueType*)+596)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   native: #09 pc 000dbe19  /system/lib/libart.so (art::CheckJNI::GetStringCharsInternal(char const*, _JNIEnv*, _jstring*, unsigned char*, bool, bool)+472)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   native: #10 pc 000cda1b  /system/lib/libart.so (art::CheckJNI::GetStringUTFChars(_JNIEnv*, _jstring*, unsigned char*)+22)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   native: #11 pc 00003b2b  /data/app/com.nier.nlogger-eJu-YGIO4bmRJOZ1tAxmEQ==/lib/arm/libnlogger.so (Java_com_nier_nlogger_Logger1_nativeInit+154)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   native: #12 pc 000000c5  /data/app/com.nier.nlogger-eJu-YGIO4bmRJOZ1tAxmEQ==/oat/arm/base.odex (Java_com_nier_nlogger_Logger1_nativeInit__Ljava_lang_String_2Ljava_lang_String_2ILjava_lang_String_2Ljava_lang_String_2+172)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   at com.nier.nlogger.Logger1.nativeInit(Native method)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   at com.nier.nlogger.NLogger.init(NLogger.kt:48)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   at com.nier.nlogger.Logger$Companion.init(Logger.kt:35)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   at com.nier.nlogger.Logger$Companion.init(Logger.kt:52)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   at com.nier.sample.MainActivity.onCreate(MainActivity.kt:20)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   at android.app.Activity.performCreate(Activity.java:7070)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   at android.app.Activity.performCreate(Activity.java:7061)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1214)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:2793)
+2019-09-04 18:31:09.716 18794-18794/? A/zygote: java_vm_ext.cc:534]   at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:2918)
+2019-09-04 18:31:09.717 18794-18794/? A/zygote: java_vm_ext.cc:534]   at android.app.ActivityThread.-wrap11(ActivityThread.java:-1)
+2019-09-04 18:31:09.717 18794-18794/? A/zygote: java_vm_ext.cc:534]   at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1636)
+2019-09-04 18:31:09.717 18794-18794/? A/zygote: java_vm_ext.cc:534]   at android.os.Handler.dispatchMessage(Handler.java:106)
+2019-09-04 18:31:09.717 18794-18794/? A/zygote: java_vm_ext.cc:534]   at android.os.Looper.loop(Looper.java:171)
+2019-09-04 18:31:09.717 18794-18794/? A/zygote: java_vm_ext.cc:534]   at android.app.ActivityThread.main(ActivityThread.java:6642)
+2019-09-04 18:31:09.717 18794-18794/? A/zygote: java_vm_ext.cc:534]   at java.lang.reflect.Method.invoke(Native method)
+2019-09-04 18:31:09.717 18794-18794/? A/zygote: java_vm_ext.cc:534]   at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:518)
+2019-09-04 18:31:09.717 18794-18794/? A/zygote: java_vm_ext.cc:534]   at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:873)
+2019-09-04 18:31:09.717 18794-18794/? A/zygote: java_vm_ext.cc:534] 
+2019-09-04 18:31:09.829 18794-18794/? A/zygote: runtime.cc:598] Runtime aborting...
+2019-09-04 18:31:09.829 18794-18794/? A/zygote: runtime.cc:598] Dumping all threads without appropriate locks held: thread list lock mutator lock
+2019-09-04 18:31:09.829 18794-18794/? A/zygote: runtime.cc:598] All threads:
+2019-09-04 18:31:09.829 18794-18794/? A/zygote: runtime.cc:598] DALVIK THREADS (13):
+2019-09-04 18:31:09.829 18794-18794/? A/zygote: runtime.cc:598] "main" prio=10 tid=1 Runnable
+2019-09-04 18:31:09.829 18794-18794/? A/zygote: runtime.cc:598]   | group="" sCount=0 dsCount=0 flags=0 obj=0x73bc5ef0 self=0xb2c5d000
+2019-09-04 18:31:09.829 18794-18794/? A/zygote: runtime.cc:598]   | sysTid=18794 nice=-10 cgrp=default sched=0/0 handle=0xb6ebb4a4
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   | state=R schedstat=( 618192463 21922920 399 ) utm=56 stm=5 core=3 HZ=100
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   | stack=0xbe2a0000-0xbe2a2000 stackSize=8MB
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   | held mutexes= "abort lock" "mutator lock"(shared held)
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   native: #00 pc 002e93d7  /system/lib/libart.so (art::DumpNativeStack(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, int, BacktraceMap*, char const*, art::ArtMethod*, void*)+130)
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   native: #01 pc 0037ca91  /system/lib/libart.so (art::Thread::DumpStack(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, bool, BacktraceMap*, bool) const+204)
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   native: #02 pc 00379133  /system/lib/libart.so (art::Thread::Dump(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, bool, BacktraceMap*, bool) const+34)
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   native: #03 pc 00391d2f  /system/lib/libart.so (art::DumpCheckpoint::Run(art::Thread*)+698)
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   native: #04 pc 0038b5b5  /system/lib/libart.so (art::ThreadList::RunCheckpoint(art::Closure*, art::Closure*)+320)
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   native: #05 pc 0038b0b3  /system/lib/libart.so (art::ThreadList::Dump(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, bool)+530)
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   native: #06 pc 00369f79  /system/lib/libart.so (art::AbortState::Dump(std::__1::basic_ostream<char, std::__1::char_traits<char>>&) const+188)
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   native: #07 pc 0035c44d  /system/lib/libart.so (art::Runtime::Abort(char const*)+132)
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   native: #08 pc 0041fa2d  /system/lib/libart.so (android::base::LogMessage::~LogMessage()+452)
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   native: #09 pc 0024e125  /system/lib/libart.so (art::JavaVMExt::JniAbort(char const*, char const*)+1212)
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   native: #10 pc 0024e31b  /system/lib/libart.so (art::JavaVMExt::JniAbortF(char const*, char const*, ...)+66)
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   native: #11 pc 00380db9  /system/lib/libart.so (art::Thread::DecodeJObject(_jobject*) const+300)
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   native: #12 pc 000d5949  /system/lib/libart.so (art::ScopedCheck::CheckInstance(art::ScopedObjectAccess&, art::ScopedCheck::InstanceKind, _jobject*, bool)+44)
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   native: #13 pc 000d509d  /system/lib/libart.so (art::ScopedCheck::CheckPossibleHeapValue(art::ScopedObjectAccess&, char, art::JniValueType)+220)
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   native: #14 pc 000d492d  /system/lib/libart.so (art::ScopedCheck::Check(art::ScopedObjectAccess&, bool, char const*, art::JniValueType*)+596)
+2019-09-04 18:31:09.830 18794-18794/? A/zygote: runtime.cc:598]   native: #15 pc 000dbe19  /system/lib/libart.so (art::CheckJNI::GetStringCharsInternal(char const*, _JNIEnv*, _jstring*, unsigned char*, bool, bool)+472)
+2019-09-04 18:31:09.831 18794-18794/? A/zygote: runtime.cc:598]   native: #16 pc 000cda1b  /system/lib/libart.so (art::CheckJNI::GetStringUTFChars(_JNIEnv*, _jstring*, unsigned char*)+22)
+2019-09-04 18:31:09.831 18794-18794/? A/zygote: runtime.cc:598]   native: #17 pc 00003b2b  /data/app/com.nier.nlogger-eJu-YGIO4bmRJOZ1tAxmEQ==/lib/arm/libnlogger.so (Java_com_nier_nlogger_Logger1_nativeInit+154)
+2019-09-04 18:31:09.831 18794-18794/? A/zygote: runtime.cc:598]   native: #18 pc 000000c5  /data/app/com.nier.nlogger-eJu-YGIO4bmRJOZ1tAxmEQ==/oat/arm/base.odex (Java_com_nier_nlogger_Logger1_nativeInit__Ljava_lang_String_2Ljava_lang_String_2ILjava_lang_String_2Ljava_lang_String_2+172)
+2019-09-04 18:31:09.831 18794-18794/? A/zygote: runtime.cc:598]   at com.nier.nlogger.Logger1.nativeInit(Native method)
+2019-09-04 18:31:09.831 18794-18794/? A/zygote: runtime.cc:598]   at com.nier.nlogger.NLogger.init(NLogger.kt:48)
+2019-09-04 18:31:09.831 18794-18794/? A/zygote: runtime.cc:598]   at com.nier.nlogger.Logger$Companion.init(Logger.kt:35)
+2019-09-04 18:31:09.831 18794-18794/? A/zygote: runtime.cc:598]   at com.nier.nlogger.Logger$Companion.init(Logger.kt:52)
+2019-09-04 18:31:09.831 18794-18794/? A/zygote: runtime.cc:598]   at com.nier.sample.MainActivity.onCreate(MainActivity.kt:20)
+2019-09-04 18:31:09.831 18794-18794/? A/zygote: runtime.cc:598]   at android.app.Activity.performCreate(Activity.java:7070)
+2019-09-04 18:31:09.831 18794-18794/? A/zygote: runtime.cc:598]   at android.app.Activity.performCreate(Activity.java:7061)
+2019-09-04 18:31:09.831 18794-18794/? A/zygote: runtime.cc:598]   at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1214)
+2019-09-04 18:31:09.831 18794-18794/? A/zygote: runtime.cc:598]   at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:2793)
+2019-09-04 18:31:09.831 18794-18794/? A/zygote: runtime.cc:598]   at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:2918)
+2019-09-04 18:31:09.831 18794-18794/? A/zygote: runtime.cc:598]   at android.app.ActivityThread.-wrap11(ActivityThread.java:-1)
+2019-09-04 18:31:09.831 18794-18794/? A/zygote: runtime.cc:598]   at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1636)
+2019-09-04 18:31:09.831 18794-18794/? A/zygote: runtime.cc:598]   at android.os.Handler.dispatchMessage(Handler.java:106)
+2019-09-04 18:31:09.831 18794-18794/? A/zygote: runtime.cc:598]   at android.os.Looper.loop(Looper.java:171)
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598]   at android.app.ActivityThread.main(ActivityThread.java:6642)
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.reflect.Method.invoke(Native method)
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598]   at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:518)
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598]   at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:873)
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598] 
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598] "Jit thread pool worker thread 0" prio=10 tid=2 Native
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598]   | group="" sCount=1 dsCount=0 flags=1 obj=0x144c0000 self=0xaa209000
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598]   | sysTid=18804 nice=9 cgrp=default sched=0/0 handle=0xaa1ff970
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598]   | state=S schedstat=( 148156616 3333693 78 ) utm=8 stm=6 core=0 HZ=100
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598]   | stack=0xaa101000-0xaa103000 stackSize=1022KB
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598]   | held mutexes=
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598]   kernel: futex_wait_queue_me+0x114/0x1ac
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598]   kernel: futex_wait+0x11c/0x26c
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598]   kernel: do_futex+0x124/0xb64
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598]   kernel: SyS_futex+0x108/0x188
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598]   native: #00 pc 00018d04  /system/lib/libc.so (syscall+28)
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598]   native: #01 pc 000b7a05  /system/lib/libart.so (art::ConditionVariable::WaitHoldingLocks(art::Thread*)+80)
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598]   native: #02 pc 00392fb5  /system/lib/libart.so (art::ThreadPool::GetTask(art::Thread*)+172)
+2019-09-04 18:31:09.832 18794-18794/? A/zygote: runtime.cc:598]   native: #03 pc 0039292b  /system/lib/libart.so (art::ThreadPoolWorker::Run()+62)
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598]   native: #04 pc 00392549  /system/lib/libart.so (art::ThreadPoolWorker::Callback(void*)+92)
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598]   native: #05 pc 00047507  /system/lib/libc.so (__pthread_start(void*)+22)
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598]   native: #06 pc 0001af75  /system/lib/libc.so (__start_thread+32)
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598]   (no managed stack frames)
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598] 
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598] "Signal Catcher" prio=10 tid=3 WaitingInMainSignalCatcherLoop
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598]   | group="" sCount=1 dsCount=0 flags=1 obj=0x144c00b0 self=0xb2c5dc00
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598]   | sysTid=18805 nice=0 cgrp=default sched=0/0 handle=0xaa0fe970
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598]   | state=S schedstat=( 527770 7692 2 ) utm=0 stm=0 core=1 HZ=100
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598]   | stack=0xaa004000-0xaa006000 stackSize=1006KB
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598]   | held mutexes=
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598]   kernel: do_sigtimedwait+0x1bc/0x278
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598]   kernel: SyS_rt_sigtimedwait+0xcc/0x158
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598]   native: #00 pc 00048dac  /system/lib/libc.so (__rt_sigtimedwait+12)
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598]   native: #01 pc 00020ad7  /system/lib/libc.so (sigwait+34)
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598]   native: #02 pc 0036f45f  /system/lib/libart.so (art::SignalSet::Wait()+22)
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598]   native: #03 pc 0036f085  /system/lib/libart.so (art::SignalCatcher::WaitForSignal(art::Thread*, art::SignalSet&)+180)
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598]   native: #04 pc 0036dd47  /system/lib/libart.so (art::SignalCatcher::Run(void*)+182)
+2019-09-04 18:31:09.833 18794-18794/? A/zygote: runtime.cc:598]   native: #05 pc 00047507  /system/lib/libc.so (__pthread_start(void*)+22)
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598]   native: #06 pc 0001af75  /system/lib/libc.so (__start_thread+32)
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598]   (no managed stack frames)
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598] 
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598] "JDWP" prio=10 tid=4 WaitingInMainDebuggerLoop
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598]   | group="" sCount=1 dsCount=0 flags=1 obj=0x144c0138 self=0xaa20cc00
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598]   | sysTid=18806 nice=0 cgrp=default sched=0/0 handle=0x99dd9970
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598]   | state=S schedstat=( 3636925 537154 6 ) utm=0 stm=0 core=5 HZ=100
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598]   | stack=0x99cdf000-0x99ce1000 stackSize=1006KB
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598]   | held mutexes=
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598]   kernel: __skb_wait_for_more_packets+0x118/0x180
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598]   kernel: unix_dgram_recvmsg+0x9c/0x468
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598]   kernel: unix_seqpacket_recvmsg+0x20/0x2c
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598]   kernel: sock_recvmsg+0x48/0x4c
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598]   kernel: ___sys_recvmsg+0xac/0x148
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598]   kernel: __sys_recvmsg+0x54/0x90
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598]   kernel: SyS_recvmsg+0x10/0x14
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598]   native: #00 pc 00049b30  /system/lib/libc.so (recvmsg+8)
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598]   native: #01 pc 0040c269  /system/lib/libart.so (art::JDWP::JdwpAdbState::ReceiveClientFd()+88)
+2019-09-04 18:31:09.834 18794-18794/? A/zygote: runtime.cc:598]   native: #02 pc 0040c67f  /system/lib/libart.so (art::JDWP::JdwpAdbState::Accept()+410)
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   native: #03 pc 0025d9e3  /system/lib/libart.so (art::JDWP::JdwpState::Run()+394)
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   native: #04 pc 0025d19b  /system/lib/libart.so (art::JDWP::StartJdwpThread(void*)+22)
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   native: #05 pc 00047507  /system/lib/libc.so (__pthread_start(void*)+22)
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   native: #06 pc 0001af75  /system/lib/libc.so (__start_thread+32)
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   (no managed stack frames)
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598] 
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598] "ReferenceQueueDaemon" prio=10 tid=5 Waiting
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   | group="" sCount=1 dsCount=0 flags=1 obj=0x144c01d0 self=0xb2c5e200
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   | sysTid=18807 nice=4 cgrp=default sched=0/0 handle=0x99cdc970
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   | state=S schedstat=( 763154 0 2 ) utm=0 stm=0 core=1 HZ=100
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   | stack=0x99bda000-0x99bdc000 stackSize=1038KB
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   | held mutexes=
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   kernel: futex_wait_queue_me+0x114/0x1ac
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   kernel: futex_wait+0x11c/0x26c
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   kernel: do_futex+0x124/0xb64
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   kernel: SyS_futex+0x108/0x188
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   native: #00 pc 00018d04  /system/lib/libc.so (syscall+28)
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   native: #01 pc 000b7a05  /system/lib/libart.so (art::ConditionVariable::WaitHoldingLocks(art::Thread*)+80)
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   native: #02 pc 002e55bf  /system/lib/libart.so (art::Monitor::Wait(art::Thread*, long long, int, bool, art::ThreadState)+758)
+2019-09-04 18:31:09.835 18794-18794/? A/zygote: runtime.cc:598]   native: #03 pc 002e6c6f  /system/lib/libart.so (art::Monitor::Wait(art::Thread*, art::mirror::Object*, long long, int, bool, art::ThreadState)+178)
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598]   native: #04 pc 002f7bcf  /system/lib/libart.so (art::Object_wait(_JNIEnv*, _jobject*)+32)
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598]   native: #05 pc 0000053b  /system/framework/arm/boot.oat (Java_java_lang_Object_wait__+74)
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Object.wait(Native method)
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598]   - waiting on <0x006e8d45> (a java.lang.Class<java.lang.ref.ReferenceQueue>)
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Daemons$ReferenceQueueDaemon.runInternal(Daemons.java:180)
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598]   - locked <0x006e8d45> (a java.lang.Class<java.lang.ref.ReferenceQueue>)
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Daemons$Daemon.run(Daemons.java:105)
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Thread.run(Thread.java:764)
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598] 
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598] "FinalizerDaemon" prio=10 tid=6 Waiting
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598]   | group="" sCount=1 dsCount=0 flags=1 obj=0x144c02e0 self=0xb2c5e800
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598]   | sysTid=18808 nice=4 cgrp=default sched=0/0 handle=0x99bd7970
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598]   | state=S schedstat=( 1109846 41077 7 ) utm=0 stm=0 core=0 HZ=100
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598]   | stack=0x99ad5000-0x99ad7000 stackSize=1038KB
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598]   | held mutexes=
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598]   kernel: futex_wait_queue_me+0x114/0x1ac
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598]   kernel: futex_wait+0x11c/0x26c
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598]   kernel: do_futex+0x124/0xb64
+2019-09-04 18:31:09.836 18794-18794/? A/zygote: runtime.cc:598]   kernel: SyS_futex+0x108/0x188
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598]   native: #00 pc 00018d04  /system/lib/libc.so (syscall+28)
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598]   native: #01 pc 000b7a05  /system/lib/libart.so (art::ConditionVariable::WaitHoldingLocks(art::Thread*)+80)
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598]   native: #02 pc 002e55bf  /system/lib/libart.so (art::Monitor::Wait(art::Thread*, long long, int, bool, art::ThreadState)+758)
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598]   native: #03 pc 002e6c6f  /system/lib/libart.so (art::Monitor::Wait(art::Thread*, art::mirror::Object*, long long, int, bool, art::ThreadState)+178)
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598]   native: #04 pc 002f7bfb  /system/lib/libart.so (art::Object_waitJI(_JNIEnv*, _jobject*, long long, int)+36)
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598]   native: #05 pc 0000081d  /system/framework/arm/boot.oat (Java_java_lang_Object_wait__JI+92)
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Object.wait(Native method)
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598]   - waiting on <0x067b5c9a> (a java.lang.Object)
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Object.wait(Object.java:422)
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:188)
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598]   - locked <0x067b5c9a> (a java.lang.Object)
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:209)
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Daemons$FinalizerDaemon.runInternal(Daemons.java:234)
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Daemons$Daemon.run(Daemons.java:105)
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Thread.run(Thread.java:764)
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598] 
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598] "FinalizerWatchdogDaemon" prio=10 tid=7 Sleeping
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598]   | group="" sCount=1 dsCount=0 flags=1 obj=0x144c0500 self=0xb2c5ee00
+2019-09-04 18:31:09.837 18794-18794/? A/zygote: runtime.cc:598]   | sysTid=18809 nice=4 cgrp=default sched=0/0 handle=0x99ad2970
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   | state=S schedstat=( 379693 0 2 ) utm=0 stm=0 core=1 HZ=100
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   | stack=0x999d0000-0x999d2000 stackSize=1038KB
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   | held mutexes=
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   kernel: futex_wait_queue_me+0x114/0x1ac
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   kernel: futex_wait+0x11c/0x26c
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   kernel: do_futex+0x124/0xb64
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   kernel: SyS_futex+0x108/0x188
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   native: #00 pc 00018d08  /system/lib/libc.so (syscall+32)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   native: #01 pc 000b7d19  /system/lib/libart.so (art::ConditionVariable::TimedWait(art::Thread*, long long, int)+100)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   native: #02 pc 002e55d1  /system/lib/libart.so (art::Monitor::Wait(art::Thread*, long long, int, bool, art::ThreadState)+776)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   native: #03 pc 002e6c6f  /system/lib/libart.so (art::Monitor::Wait(art::Thread*, art::mirror::Object*, long long, int, bool, art::ThreadState)+178)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   native: #04 pc 002fce61  /system/lib/libart.so (art::Thread_sleep(_JNIEnv*, _jclass*, _jobject*, long long, int)+56)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   native: #05 pc 000184f7  /system/framework/arm/boot.oat (Java_java_lang_Thread_sleep__Ljava_lang_Object_2JI+142)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Thread.sleep(Native method)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   - sleeping on <0x01d989cb> (a java.lang.Object)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Thread.sleep(Thread.java:373)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   - locked <0x01d989cb> (a java.lang.Object)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Thread.sleep(Thread.java:314)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Daemons$FinalizerWatchdogDaemon.sleepFor(Daemons.java:344)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Daemons$FinalizerWatchdogDaemon.waitForFinalization(Daemons.java:366)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Daemons$FinalizerWatchdogDaemon.runInternal(Daemons.java:283)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Daemons$Daemon.run(Daemons.java:105)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Thread.run(Thread.java:764)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598] 
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598] "HeapTaskDaemon" prio=10 tid=8 Blocked
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   | group="" sCount=1 dsCount=0 flags=1 obj=0x144c08f8 self=0xb2c6f000
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   | sysTid=18810 nice=4 cgrp=default sched=0/0 handle=0x999cd970
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   | state=S schedstat=( 25473230 525616 17 ) utm=2 stm=0 core=0 HZ=100
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   | stack=0x998cb000-0x998cd000 stackSize=1038KB
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   | held mutexes=
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   kernel: futex_wait_queue_me+0x114/0x1ac
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   kernel: futex_wait+0x11c/0x26c
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   kernel: do_futex+0x124/0xb64
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   kernel: SyS_futex+0x108/0x188
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   native: #00 pc 00018d08  /system/lib/libc.so (syscall+32)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   native: #01 pc 000b7d19  /system/lib/libart.so (art::ConditionVariable::TimedWait(art::Thread*, long long, int)+100)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   native: #02 pc 001cb5fd  /system/lib/libart.so (art::gc::TaskProcessor::GetTask(art::Thread*)+232)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   native: #03 pc 001cbbf5  /system/lib/libart.so (art::gc::TaskProcessor::RunAllTasks(art::Thread*)+44)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   native: #04 pc 0019523b  /system/framework/arm/boot-core-libart.oat (Java_dalvik_system_VMRuntime_runHeapTasks__+74)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   at dalvik.system.VMRuntime.runHeapTasks(Native method)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   - waiting to lock an unknown object
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Daemons$HeapTaskDaemon.runInternal(Daemons.java:463)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Daemons$Daemon.run(Daemons.java:105)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.Thread.run(Thread.java:764)
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598] 
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598] "Binder:18794_1" prio=10 tid=9 Native
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   | group="" sCount=1 dsCount=0 flags=1 obj=0x144c0588 self=0xa8822000
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   | sysTid=18814 nice=0 cgrp=default sched=0/0 handle=0x997ca970
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   | state=S schedstat=( 1259154 0 8 ) utm=0 stm=0 core=1 HZ=100
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   | stack=0x996d0000-0x996d2000 stackSize=1006KB
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   | held mutexes=
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   kernel: binder_thread_read+0x414/0x1338
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   kernel: binder_ioctl+0x878/0xba8
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   kernel: do_vfs_ioctl+0xb8/0x88c
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   kernel: SyS_ioctl+0x74/0x84
+2019-09-04 18:31:09.838 18794-18794/? A/zygote: runtime.cc:598]   native: #00 pc 00048bb8  /system/lib/libc.so (__ioctl+8)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #01 pc 0001dd95  /system/lib/libc.so (ioctl+32)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #02 pc 000424dd  /system/lib/libbinder.so (android::IPCThreadState::talkWithDriver(bool)+168)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #03 pc 000425d7  /system/lib/libbinder.so (android::IPCThreadState::getAndExecuteCommand()+10)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #04 pc 00042baf  /system/lib/libbinder.so (android::IPCThreadState::joinThreadPool(bool)+38)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #05 pc 00057bdf  /system/lib/libbinder.so (???)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #06 pc 0000d295  /system/lib/libutils.so (android::Thread::_threadLoop(void*)+144)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #07 pc 000765d5  /system/lib/libandroid_runtime.so (android::AndroidRuntime::javaThreadShell(void*)+80)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #08 pc 00047507  /system/lib/libc.so (__pthread_start(void*)+22)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #09 pc 0001af75  /system/lib/libc.so (__start_thread+32)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   (no managed stack frames)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598] 
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598] "Binder:18794_2" prio=10 tid=10 Native
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | group="" sCount=1 dsCount=0 flags=1 obj=0x144c0738 self=0xaa21f800
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | sysTid=18815 nice=0 cgrp=default sched=0/0 handle=0x996cd970
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | state=S schedstat=( 8152383 210230 9 ) utm=0 stm=0 core=0 HZ=100
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | stack=0x995d3000-0x995d5000 stackSize=1006KB
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | held mutexes=
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   kernel: binder_thread_read+0x414/0x1338
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   kernel: binder_ioctl+0x878/0xba8
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   kernel: do_vfs_ioctl+0xb8/0x88c
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   kernel: SyS_ioctl+0x74/0x84
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #00 pc 00048bb8  /system/lib/libc.so (__ioctl+8)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #01 pc 0001dd95  /system/lib/libc.so (ioctl+32)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #02 pc 000424dd  /system/lib/libbinder.so (android::IPCThreadState::talkWithDriver(bool)+168)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #03 pc 000425d7  /system/lib/libbinder.so (android::IPCThreadState::getAndExecuteCommand()+10)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #04 pc 00042baf  /system/lib/libbinder.so (android::IPCThreadState::joinThreadPool(bool)+38)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #05 pc 00057bdf  /system/lib/libbinder.so (???)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #06 pc 0000d295  /system/lib/libutils.so (android::Thread::_threadLoop(void*)+144)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #07 pc 000765d5  /system/lib/libandroid_runtime.so (android::AndroidRuntime::javaThreadShell(void*)+80)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #08 pc 00047507  /system/lib/libc.so (__pthread_start(void*)+22)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #09 pc 0001af75  /system/lib/libc.so (__start_thread+32)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   (no managed stack frames)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598] 
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598] "Profile Saver" prio=10 tid=11 Native
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | group="" sCount=1 dsCount=0 flags=1 obj=0x144c07d8 self=0xa5264c00
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | sysTid=18820 nice=9 cgrp=default sched=0/0 handle=0x98fe8970
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | state=S schedstat=( 1197924 1586923 7 ) utm=0 stm=0 core=1 HZ=100
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | stack=0x98eee000-0x98ef0000 stackSize=1006KB
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | held mutexes=
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   kernel: futex_wait_queue_me+0x114/0x1ac
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   kernel: futex_wait+0x11c/0x26c
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   kernel: do_futex+0x124/0xb64
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   kernel: SyS_futex+0x108/0x188
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #00 pc 00018d08  /system/lib/libc.so (syscall+32)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #01 pc 000b7d19  /system/lib/libart.so (art::ConditionVariable::TimedWait(art::Thread*, long long, int)+100)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #02 pc 0027627f  /system/lib/libart.so (art::ProfileSaver::Run()+142)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #03 pc 002786df  /system/lib/libart.so (art::ProfileSaver::RunProfileSaverThread(void*)+50)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #04 pc 00047507  /system/lib/libc.so (__pthread_start(void*)+22)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #05 pc 0001af75  /system/lib/libc.so (__start_thread+32)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   (no managed stack frames)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598] 
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598] "Binder:interceptor" prio=10 tid=12 Native
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | group="" sCount=1 dsCount=0 flags=1 obj=0x14515eb8 self=0xa759b200
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | sysTid=18823 nice=-4 cgrp=default sched=0/0 handle=0x98eeb970
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | state=S schedstat=( 30253841 3599851 38 ) utm=2 stm=1 core=0 HZ=100
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | stack=0x98de9000-0x98deb000 stackSize=1038KB
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | held mutexes=
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   kernel: SyS_epoll_wait+0x38c/0x508
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   kernel: SyS_epoll_pwait+0x168/0x180
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #00 pc 00048a7c  /system/lib/libc.so (__epoll_pwait+20)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #01 pc 0001b371  /system/lib/libc.so (epoll_pwait+60)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #02 pc 0001b3a1  /system/lib/libc.so (epoll_wait+12)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #03 pc 00010137  /system/lib/libutils.so (android::Looper::pollInner(int)+166)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #04 pc 0000fff9  /system/lib/libutils.so (android::Looper::pollOnce(int, int*, int*, void**)+32)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #05 pc 000ba2b9  /system/lib/libandroid_runtime.so (android::NativeMessageQueue::pollOnce(_JNIEnv*, _jobject*, int)+24)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   native: #06 pc 0018b855  /system/framework/arm/boot-framework.oat (Java_android_os_MessageQueue_nativePollOnce__JI+92)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   at android.os.MessageQueue.nativePollOnce(Native method)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   at android.os.MessageQueue.next(MessageQueue.java:331)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   at android.os.Looper.loop(Looper.java:147)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   at android.os.HandlerThread.run(HandlerThread.java:65)
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598] 
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598] "ActionDispatcher" prio=10 tid=13 Native
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | group="" sCount=1 dsCount=0 flags=1 obj=0x12cca868 self=0xa56e5e00
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | sysTid=18827 nice=0 cgrp=default sched=0/0 handle=0x98b51970
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | state=S schedstat=( 580614 0 1 ) utm=0 stm=0 core=0 HZ=100
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | stack=0x98a4f000-0x98a51000 stackSize=1038KB
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   | held mutexes=
+2019-09-04 18:31:09.839 18794-18794/? A/zygote: runtime.cc:598]   kernel: SyS_epoll_wait+0x38c/0x508
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   kernel: SyS_epoll_pwait+0x168/0x180
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #00 pc 00048a7c  /system/lib/libc.so (__epoll_pwait+20)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #01 pc 0001b371  /system/lib/libc.so (epoll_pwait+60)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #02 pc 0001b3a1  /system/lib/libc.so (epoll_wait+12)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #03 pc 00010137  /system/lib/libutils.so (android::Looper::pollInner(int)+166)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #04 pc 0000fff9  /system/lib/libutils.so (android::Looper::pollOnce(int, int*, int*, void**)+32)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #05 pc 000ba2b9  /system/lib/libandroid_runtime.so (android::NativeMessageQueue::pollOnce(_JNIEnv*, _jobject*, int)+24)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #06 pc 0018b855  /system/framework/arm/boot-framework.oat (Java_android_os_MessageQueue_nativePollOnce__JI+92)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at android.os.MessageQueue.nativePollOnce(Native method)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at android.os.MessageQueue.next(MessageQueue.java:331)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at android.os.Looper.loop(Looper.java:147)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at android.os.HandlerThread.run(HandlerThread.java:65)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598] 
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598] Aborting thread:
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598] "main" prio=10 tid=1 Native
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   | group="" sCount=0 dsCount=0 flags=0 obj=0x73bc5ef0 self=0xb2c5d000
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   | sysTid=18794 nice=-10 cgrp=default sched=0/0 handle=0xb6ebb4a4
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   | state=R schedstat=( 695829539 22005613 424 ) utm=64 stm=5 core=3 HZ=100
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   | stack=0xbe2a0000-0xbe2a2000 stackSize=8MB
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   | held mutexes= "abort lock"
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #00 pc 002e93d7  /system/lib/libart.so (art::DumpNativeStack(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, int, BacktraceMap*, char const*, art::ArtMethod*, void*)+130)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #01 pc 0037ca91  /system/lib/libart.so (art::Thread::DumpStack(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, bool, BacktraceMap*, bool) const+204)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #02 pc 00379133  /system/lib/libart.so (art::Thread::Dump(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, bool, BacktraceMap*, bool) const+34)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #03 pc 0036a3a1  /system/lib/libart.so (art::AbortState::DumpThread(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, art::Thread*) const+28)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #04 pc 0036a087  /system/lib/libart.so (art::AbortState::Dump(std::__1::basic_ostream<char, std::__1::char_traits<char>>&) const+458)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #05 pc 0035c44d  /system/lib/libart.so (art::Runtime::Abort(char const*)+132)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #06 pc 0041fa2d  /system/lib/libart.so (android::base::LogMessage::~LogMessage()+452)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #07 pc 0024e125  /system/lib/libart.so (art::JavaVMExt::JniAbort(char const*, char const*)+1212)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #08 pc 0024e31b  /system/lib/libart.so (art::JavaVMExt::JniAbortF(char const*, char const*, ...)+66)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #09 pc 00380db9  /system/lib/libart.so (art::Thread::DecodeJObject(_jobject*) const+300)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #10 pc 000d5949  /system/lib/libart.so (art::ScopedCheck::CheckInstance(art::ScopedObjectAccess&, art::ScopedCheck::InstanceKind, _jobject*, bool)+44)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #11 pc 000d509d  /system/lib/libart.so (art::ScopedCheck::CheckPossibleHeapValue(art::ScopedObjectAccess&, char, art::JniValueType)+220)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #12 pc 000d492d  /system/lib/libart.so (art::ScopedCheck::Check(art::ScopedObjectAccess&, bool, char const*, art::JniValueType*)+596)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #13 pc 000dbe19  /system/lib/libart.so (art::CheckJNI::GetStringCharsInternal(char const*, _JNIEnv*, _jstring*, unsigned char*, bool, bool)+472)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #14 pc 000cda1b  /system/lib/libart.so (art::CheckJNI::GetStringUTFChars(_JNIEnv*, _jstring*, unsigned char*)+22)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #15 pc 00003b2b  /data/app/com.nier.nlogger-eJu-YGIO4bmRJOZ1tAxmEQ==/lib/arm/libnlogger.so (Java_com_nier_nlogger_Logger1_nativeInit+154)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   native: #16 pc 000000c5  /data/app/com.nier.nlogger-eJu-YGIO4bmRJOZ1tAxmEQ==/oat/arm/base.odex (???)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at com.nier.nlogger.Logger1.nativeInit(Native method)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at com.nier.nlogger.NLogger.init(NLogger.kt:48)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at com.nier.nlogger.Logger$Companion.init(Logger.kt:35)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at com.nier.nlogger.Logger$Companion.init(Logger.kt:52)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at com.nier.sample.MainActivity.onCreate(MainActivity.kt:20)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at android.app.Activity.performCreate(Activity.java:7070)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at android.app.Activity.performCreate(Activity.java:7061)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1214)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:2793)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:2918)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at android.app.ActivityThread.-wrap11(ActivityThread.java:-1)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1636)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at android.os.Handler.dispatchMessage(Handler.java:106)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at android.os.Looper.loop(Looper.java:171)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at android.app.ActivityThread.main(ActivityThread.java:6642)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at java.lang.reflect.Method.invoke(Native method)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:518)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598]   at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:873)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:598] 
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606] JNI DETECTED ERROR IN APPLICATION: use of deleted local reference 0xb261ebf9
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]     from int com.nier.nlogger.Logger1.nativeInit(java.lang.String, java.lang.String, int, java.lang.String, java.lang.String)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606] "main" prio=5 tid=1 Runnable
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   | group="main" sCount=0 dsCount=0 flags=0 obj=0x73bc5ef0 self=0xb2c5d000
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   | sysTid=18794 nice=-10 cgrp=default sched=0/0 handle=0xb6ebb4a4
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   | state=R schedstat=( 582955073 20507079 359 ) utm=55 stm=3 core=3 HZ=100
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   | stack=0xbe2a0000-0xbe2a2000 stackSize=8MB
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   | held mutexes= "mutator lock"(shared held)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   native: #00 pc 002e93d7  /system/lib/libart.so (art::DumpNativeStack(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, int, BacktraceMap*, char const*, art::ArtMethod*, void*)+130)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   native: #01 pc 0037ca91  /system/lib/libart.so (art::Thread::DumpStack(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, bool, BacktraceMap*, bool) const+204)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   native: #02 pc 00379133  /system/lib/libart.so (art::Thread::Dump(std::__1::basic_ostream<char, std::__1::char_traits<char>>&, bool, BacktraceMap*, bool) const+34)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   native: #03 pc 0024df39  /system/lib/libart.so (art::JavaVMExt::JniAbort(char const*, char const*)+720)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   native: #04 pc 0024e31b  /system/lib/libart.so (art::JavaVMExt::JniAbortF(char const*, char const*, ...)+66)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   native: #05 pc 00380db9  /system/lib/libart.so (art::Thread::DecodeJObject(_jobject*) const+300)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   native: #06 pc 000d5949  /system/lib/libart.so (art::ScopedCheck::CheckInstance(art::ScopedObjectAccess&, art::ScopedCheck::InstanceKind, _jobject*, bool)+44)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   native: #07 pc 000d509d  /system/lib/libart.so (art::ScopedCheck::CheckPossibleHeapValue(art::ScopedObjectAccess&, char, art::JniValueType)+220)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   native: #08 pc 000d492d  /system/lib/libart.so (art::ScopedCheck::Check(art::ScopedObjectAccess&, bool, char const*, art::JniValueType*)+596)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   native: #09 pc 000dbe19  /system/lib/libart.so (art::CheckJNI::GetStringCharsInternal(char const*, _JNIEnv*, _jstring*, unsigned char*, bool, bool)+472)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   native: #10 pc 000cda1b  /system/lib/libart.so (art::CheckJNI::GetStringUTFChars(_JNIEnv*, _jstring*, unsigned char*)+22)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   native: #11 pc 00003b2b  /data/app/com.nier.nlogger-eJu-YGIO4bmRJOZ1tAxmEQ==/lib/arm/libnlogger.so (Java_com_nier_nlogger_Logger1_nativeInit+154)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   native: #12 pc 000000c5  /data/app/com.nier.nlogger-eJu-YGIO4bmRJOZ1tAxmEQ==/oat/arm/base.odex (Java_com_nier_nlogger_Logger1_nativeInit__Ljava_lang_String_2Ljava_lang_String_2ILjava_lang_String_2Ljava_lang_String_2+172)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   at com.nier.nlogger.Logger1.nativeInit(Native method)
+2019-09-04 18:31:09.840 18794-18794/? A/zygote: runtime.cc:606]   at com.nier.nlogger.NLogger.init(NLogger.kt:48)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606]   at com.nier.nlogger.Logger$Companion.init(Logger.kt:35)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606]   at com.nier.nlogger.Logger$Companion.init(Logger.kt:52)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606]   at com.nier.sample.MainActivity.onCreate(MainActivity.kt:20)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606]   at android.app.Activity.performCreate(Activity.java:7070)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606]   at android.app.Activity.performCreate(Activity.java:7061)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606]   at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1214)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606]   at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:2793)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606]   at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:2918)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606]   at android.app.ActivityThread.-wrap11(ActivityThread.java:-1)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606]   at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1636)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606]   at android.os.Handler.dispatchMessage(Handler.java:106)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606]   at android.os.Looper.loop(Looper.java:171)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606]   at android.app.ActivityThread.main(ActivityThread.java:6642)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606]   at java.lang.reflect.Method.invoke(Native method)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606]   at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:518)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606]   at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:873)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606] 
+2019-09-04 18:31:09.841 18794-18794/? A/libc: Fatal signal 6 (SIGABRT), code -6 in tid 18794 (om.nier.nlogger), pid 18794 (om.nier.nlogger)
+2019-09-04 18:31:09.841 18794-18794/? A/zygote: runtime.cc:606] 
+2019-09-04 18:31:09.896 18830-18830/? A/DEBUG: *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+2019-09-04 18:31:09.896 18830-18830/? A/DEBUG: Build fingerprint: 'xiaomi/cereus/cereus:8.1.0/O11019/V9.6.7.0.OCGCNFD:user/release-keys'
+2019-09-04 18:31:09.896 18830-18830/? A/DEBUG: Revision: '0'
+2019-09-04 18:31:09.896 18830-18830/? A/DEBUG: ABI: 'arm'
+2019-09-04 18:31:09.896 18830-18830/? A/DEBUG: pid: 18794, tid: 18794, name: om.nier.nlogger  >>> com.nier.nlogger <<<
+2019-09-04 18:31:09.896 18830-18830/? A/DEBUG: signal 6 (SIGABRT), code -6 (SI_TKILL), fault addr --------
+2019-09-04 18:31:09.900 18830-18830/? A/DEBUG: Abort message: 'java_vm_ext.cc:534] JNI DETECTED ERROR IN APPLICATION: use of deleted local reference 0xb261ebf9'
+2019-09-04 18:31:09.900 18830-18830/? A/DEBUG:     r0 00000000  r1 0000496a  r2 00000006  r3 00000008
+2019-09-04 18:31:09.900 18830-18830/? A/DEBUG:     r4 0000496a  r5 0000496a  r6 bea9a944  r7 0000010c
+2019-09-04 18:31:09.900 18830-18830/? A/DEBUG:     r8 00000000  r9 b2c19368  sl 0000000a  fp bea9a990
+2019-09-04 18:31:09.900 18830-18830/? A/DEBUG:     ip a75b4f00  sp bea9a930  lr b39a48bd  pc b399e40e  cpsr 200f0030
+2019-09-04 18:31:09.909 18830-18830/? A/DEBUG: backtrace:
+2019-09-04 18:31:09.909 18830-18830/? A/DEBUG:     #00 pc 0001a40e  /system/lib/libc.so (abort+63)
+2019-09-04 18:31:09.909 18830-18830/? A/DEBUG:     #01 pc 0035c551  /system/lib/libart.so (art::Runtime::Abort(char const*)+392)
+2019-09-04 18:31:09.909 18830-18830/? A/DEBUG:     #02 pc 0041fa2d  /system/lib/libart.so (android::base::LogMessage::~LogMessage()+452)
+2019-09-04 18:31:09.909 18830-18830/? A/DEBUG:     #03 pc 0024e125  /system/lib/libart.so (art::JavaVMExt::JniAbort(char const*, char const*)+1212)
+2019-09-04 18:31:09.909 18830-18830/? A/DEBUG:     #04 pc 0024e31b  /system/lib/libart.so (art::JavaVMExt::JniAbortF(char const*, char const*, ...)+66)
+2019-09-04 18:31:09.909 18830-18830/? A/DEBUG:     #05 pc 00380db9  /system/lib/libart.so (art::Thread::DecodeJObject(_jobject*) const+300)
+2019-09-04 18:31:09.909 18830-18830/? A/DEBUG:     #06 pc 000d5949  /system/lib/libart.so (art::ScopedCheck::CheckInstance(art::ScopedObjectAccess&, art::ScopedCheck::InstanceKind, _jobject*, bool)+44)
+2019-09-04 18:31:09.909 18830-18830/? A/DEBUG:     #07 pc 000d509d  /system/lib/libart.so (art::ScopedCheck::CheckPossibleHeapValue(art::ScopedObjectAccess&, char, art::JniValueType)+220)
+2019-09-04 18:31:09.909 18830-18830/? A/DEBUG:     #08 pc 000d492d  /system/lib/libart.so (art::ScopedCheck::Check(art::ScopedObjectAccess&, bool, char const*, art::JniValueType*)+596)
+2019-09-04 18:31:09.909 18830-18830/? A/DEBUG:     #09 pc 000dbe19  /system/lib/libart.so (art::CheckJNI::GetStringCharsInternal(char const*, _JNIEnv*, _jstring*, unsigned char*, bool, bool)+472)
+2019-09-04 18:31:09.909 18830-18830/? A/DEBUG:     #10 pc 000cda1b  /system/lib/libart.so (art::CheckJNI::GetStringUTFChars(_JNIEnv*, _jstring*, unsigned char*)+22)
+2019-09-04 18:31:09.909 18830-18830/? A/DEBUG:     #11 pc 00003b2b  /data/app/com.nier.nlogger-eJu-YGIO4bmRJOZ1tAxmEQ==/lib/arm/libnlogger.so (Java_com_nier_nlogger_Logger1_nativeInit+154)
+2019-09-04 18:31:09.909 18830-18830/? A/DEBUG:     #12 pc 000100c5  /data/app/com.nier.nlogger-eJu-YGIO4bmRJOZ1tAxmEQ==/oat/arm/base.odex (offset 0x10000)
+
+
+
+
+    private external fun nativeInit(
+        cache_path: String, dir_path: String, max_file: Long, encrypt_key_16: String,
+        encrypt_iv_16: String
+    ): Int
+
+
+
+JNIEXPORT jint JNICALL
+Java_com_nier_nlogger_NLogger_nativeInit(JNIEnv *env,
+                                         jobject instance,
+                                         jstring cache_path_,
+                                         jstring dir_path_,
+                                         jlong max_file_size,
+                                         jstring encrypt_key16_,
+                                         jstring encrypt_iv16_) {
+    const char *dir_path      = (*env)->GetStringUTFChars(env, dir_path_, 0);
+    const char *cache_path    = (*env)->GetStringUTFChars(env, cache_path_, 0);
+    const char *encrypt_key16 = (*env)->GetStringUTFChars(env, encrypt_key16_, 0);
+    const char *encrypt_iv16  = (*env)->GetStringUTFChars(env, encrypt_iv16_, 0);
+
+    jint code = (jint) init_nlogger(dir_path, cache_path, max_file_size, encrypt_key16, encrypt_iv16);
+
+    (*env)->ReleaseStringUTFChars(env, dir_path_, dir_path);
+    (*env)->ReleaseStringUTFChars(env, cache_path_, cache_path);
+    (*env)->ReleaseStringUTFChars(env, encrypt_key16_, encrypt_key16);
+    (*env)->ReleaseStringUTFChars(env, encrypt_iv16_, encrypt_iv16);
+    return code;
+}
+
+
+
+2. 强杀导致部分flush失败

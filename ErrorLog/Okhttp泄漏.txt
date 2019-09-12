@@ -1,0 +1,43 @@
+09-11 16:48:36.230 32163-30919/? A/google-breakpad: -----END BREAKPAD MICRODUMP-----
+09-11 16:48:36.232 541-31943/? E/DeviceBaseImpl: [HWA_CAM3]getAFOTP() get vcm otp failed! 
+09-11 16:48:36.259 30784-30919/? A/libc: Fatal signal 6 (SIGABRT), code -6 in tid 30919 (RxCachedThreadS)
+09-11 16:48:36.291 541-31943/? E/DeviceBaseImpl: [HWA_CAM3]getAFOTP() get vcm otp failed! 
+09-11 16:48:36.351 541-31943/? E/DeviceBaseImpl: [HWA_CAM3]getAFOTP() get vcm otp failed! 
+09-11 16:48:36.369 525-525/? A/DEBUG: *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+09-11 16:48:36.369 525-525/? A/DEBUG: Build fingerprint: 'HUAWEI/EDISON/hwedison:6.0/HUAWEIEDISON-AL10/C233B017:user/release-keys'
+09-11 16:48:36.369 525-525/? A/DEBUG: Revision: '0'
+09-11 16:48:36.369 525-525/? A/DEBUG: ABI: 'arm64'
+09-11 16:48:36.370 525-525/? A/DEBUG: pid: 30784, tid: 30919, name: RxCachedThreadS  >>> com.myhexin.xcs.client.aip08 <<<
+09-11 16:48:36.370 525-525/? A/DEBUG: signal 6 (SIGABRT), code -6 (SI_TKILL), fault addr --------
+09-11 16:48:36.411 541-31943/? E/DeviceBaseImpl: [HWA_CAM3]getAFOTP() get vcm otp failed! 
+09-11 16:48:36.441 525-525/? A/DEBUG: Abort message: 'FORTIFY: FD_SET: file descriptor >= FD_SETSIZE'
+09-11 16:48:36.441 525-525/? A/DEBUG:     x0   0000000000000000  x1   00000000000078c7  x2   0000000000000006  x3   0000000000000000
+09-11 16:48:36.441 525-525/? A/DEBUG:     x4   0000000000000000  x5   0000000000000001  x6   0000000000000000  x7   0000000000000000
+09-11 16:48:36.441 525-525/? A/DEBUG:     x8   0000000000000083  x9   525e43451f3c3d1f  x10  7f7f7f7f7f7f7f7f  x11  0101010101010101
+09-11 16:48:36.441 525-525/? A/DEBUG:     x12  0000007f8f0208c0  x13  b4f6143f67e517b8  x14  b4f6143f67e517b8  x15  0001535bacdf31af
+09-11 16:48:36.442 525-525/? A/DEBUG:     x16  0000007f8f01a4d8  x17  0000007f8ef78a2c  x18  00000000ffffffd0  x19  0000007f6b375500
+09-11 16:48:36.442 525-525/? A/DEBUG:     x20  0000007f6b375440  x21  000000000000000b  x22  0000000000000006  x23  0000007ec815ede0
+09-11 16:48:36.442 525-525/? A/DEBUG:     x24  0000007f6b374270  x25  0000007f6b374280  x26  0000007f80b3c500  x27  0000007f6b374448
+09-11 16:48:36.442 525-525/? A/DEBUG:     x28  0000000000007530  x29  0000007f6b373fd0  x30  0000007f8ef76888
+09-11 16:48:36.442 525-525/? A/DEBUG:     sp   0000007f6b373fd0  pc   0000007f8ef78a34  pstate 0000000020000000
+09-11 16:48:36.454 525-525/? A/DEBUG: backtrace:
+09-11 16:48:36.454 525-525/? A/DEBUG:     #00 pc 0000000000069a34  /system/lib64/libc.so (tgkill+8)
+09-11 16:48:36.454 525-525/? A/DEBUG:     #01 pc 0000000000067884  /system/lib64/libc.so (pthread_kill+68)
+09-11 16:48:36.454 525-525/? A/DEBUG:     #02 pc 00000000000246cc  /system/lib64/libc.so (raise+28)
+09-11 16:48:36.454 525-525/? A/DEBUG:     #03 pc 000000000001efd8  /system/lib64/libc.so (abort+60)
+09-11 16:48:36.454 525-525/? A/DEBUG:     #04 pc 0000000000022420  /system/lib64/libc.so (__libc_fatal+128)
+09-11 16:48:36.454 525-525/? A/DEBUG:     #05 pc 0000000000022444  /system/lib64/libc.so (__fortify_chk_fail+32)
+09-11 16:48:36.454 525-525/? A/DEBUG:     #06 pc 0000000000070914  /system/lib64/libc.so (__FD_SET_chk+32)
+09-11 16:48:36.454 525-525/? A/DEBUG:     #07 pc 0000000000011170  /system/lib64/libjavacrypto.so
+09-11 16:48:36.454 525-525/? A/DEBUG:     #08 pc 000000000001a1a8  /system/lib64/libjavacrypto.so
+09-11 16:48:36.454 525-525/? A/DEBUG:     #09 pc 0000000074037368  /data/dalvik-cache/arm64/system@framework@boot.oat (offset 0x2462000)
+09-11 16:48:36.472 541-31943/? E/DeviceBaseImpl: [HWA_CAM3]getAFOTP() get vcm otp failed! 
+09-11 16:48:36.531 541-31943/? E/DeviceBaseImpl: [HWA_CAM3]getAFOTP() get vcm otp failed! 
+09-11 16:48:36.592 541-31943/? E/DeviceBaseImpl: [HWA_CAM3]getAFOTP() get vcm otp failed! 
+09-11 16:48:36.652 541-31943/? E/DeviceBaseImpl: [HWA_CAM3]getAFOTP() get vcm otp failed! 
+09-11 16:48:36.712 541-31943/? E/DeviceBaseImpl: [HWA_CAM3]getAFOTP() get vcm otp failed! 
+
+adb shell ulimit -n
+cd /proc/<pid>/fd
+ls -l | wc -l
+

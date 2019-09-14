@@ -1,4 +1,4 @@
-# 记录OkHttp资源释放导致的崩溃
+# 记录OkHttp引起的崩溃 & 对OkHttp资源回收的分析
 
 ## 崩溃现象
 
@@ -94,7 +94,9 @@ class EncryptResponseBody(val sourceResponseBody: ResponseBody) : ResponseBody()
     }
 }
 ```
-如上，也是项目中封装的一个统一对请求内容解密的ResponseBody，在调用string()或其他方式读取数据时会对加密的内容先进行一次解密然后再返回，此时也很容易忽略对sourceResponseBody的释放。解决方案是重写自定义ResponseBody类的close方法，在方法内去关闭源ResponseBody;
+如上，也是项目中封装的一个统一对请求内容解密的ResponseBody，在调用string()或其他方式读取数据时会对加密的内容先进行一次解密然后再返回，此时也很容易忽略对sourceResponseBody的释放。
+
+这里建议重写自定义ResponseBody类的close方法，在方法内去关闭原ResponseBody，修改代码如下;
 
 ```
 class EncryptResponseBody(val sourceResponseBody: ResponseBody) : ResponseBody() {
@@ -120,7 +122,60 @@ class EncryptResponseBody(val sourceResponseBody: ResponseBody) : ResponseBody()
 ```
 
 ## OkHttp(3.8.0)连接资源释放机制
+OkHttp最后默认返回的是一个ResponseBody给我们，而这个ResponseBody是对Socket对inputStream的封装，中间存在多层封装（如GzipSource、ChunkedSource），这里简单的称这种封装单元为一个Source或者数据源。而他们的工作原理就是当ResponseBody读取数据时，会问下层Source要数据，下层Source会问下下层要数据，最后底层的Source则是Socket了，在获得数据后再层层处理并且返回给上层，逻辑类似RxJava的响应式。
 
+![OkHttp ResponseBody](./pic/okhttp_response1.png)
 
+每层的Source都间接引用着下层都数据源Source，最后引用到了长链接Connection也就是Socket。因此在不主动释放到情况下会一直持有着Socket。
 
+而主动释放就是通过close方法，close方法会层层调用下层Source的close方法，直到Socket前一层的Source会释放对Socket的引用，这样Socket就可以重新被回收到连接池以备下次的复用。
 
+![OkHttp ResponseBody](./pic/okhttp_response2.png)
+
+**疑问：如果ResponseBody不主动close，而是随着对象的回收（如Activity的销毁）一起回收了是否就没有问题了？**
+
+会存在一定问题，因为OkHttp会在请求创建时会持有并监控处理请求的Socket通道，如果不主动close，OkHttp会认为当次请求任务还没有结束，或者还有没读完的数据在InputStream中，因此暂时不会回收复用这个Socket。
+
+如果当前Activity页面或者某个对象持有过多的`ResponseBody`不close则会出现开头的native崩溃。
+
+不过假如OkHttp发现上层的引用对象也就是`ResponseBody`对象被gc回收了，此时OkHttp会主动去回收对应的Socket连接。
+
+源码如下：
+
+```
+  private int pruneAndGetAllocationCount(RealConnection connection, long now) {
+    List<Reference<StreamAllocation>> references = connection.allocations;
+    for (int i = 0; i < references.size(); ) {
+      Reference<StreamAllocation> reference = references.get(i);
+
+      //检查引用是否为null
+      if (reference.get() != null) {
+        i++;
+        continue;
+      }
+      // 此时发现对上层的弱引用为null了表示上层gc了，但是还没有主动close释放长连接
+      // 这种情况判断为是应用程序自己的问题，这里直接进行对长连接的回收
+      // We've discovered a leaked allocation. This is an application bug.
+      StreamAllocation.StreamAllocationReference streamAllocRef =
+          (StreamAllocation.StreamAllocationReference) reference;
+      String message = "A connection to " + connection.route().address().url()
+          + " was leaked. Did you forget to close a response body?";
+      Platform.get().logCloseableLeak(message, streamAllocRef.callStackTrace);
+
+      references.remove(i);
+      //标记长链接可以被回收了
+      connection.noNewStreams = true;
+
+      ...
+    }
+
+    return references.size();
+  }
+}
+```
+Connection会通过`WeakReference`弱引用接持有`StreamAllocation`,而`ResponseBody`则会间接的持有`StreamAllocation`，通过检查`StreamAllocation`弱引用是否为null来判断`StreamAllocation`和`ResponseBody`是否被gc了，如果被gc了则回收长连接。因此可以知道在使用OkHttp时建议及时读取ResponseBody中的数据，并且主动Close释放对Socket的引用
+
+![OkHttp ResponseBody](./pic/okhttp_response4.png)
+
+## 总结
+在使用OkHttp一定要记得调用close来释放ResponseBody。

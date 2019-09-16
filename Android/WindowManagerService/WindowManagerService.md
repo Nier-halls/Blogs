@@ -262,7 +262,7 @@ public Object getSystemService(@ServiceName @NonNull String name) {
 ```
 Window在setWindowManager后会把WidowManager赋值给Activity对应字段，Activity的WindowManager对象实例是一个WindowManagerImpl，构造用的context和Window对象分别是Activity自己和Activity对应的PhoneWindow对象；
 
-Dialog在调用show后会用Activity的WindowManagerImpl来添加Window
+Dialog在调用show后会用*Activity的WindowManagerImpl*来添加Window
 ```
 // [CODE]andorid.app.Dialog
 public void show() {
@@ -277,7 +277,7 @@ public void addView(@NonNull View view, @NonNull ViewGroup.LayoutParams params) 
     mGlobal.addView(view, params, mContext.getDisplay(), mParentWindow);
 }
 ```
-这里需要注意的是和Activity在添加Window时不同，此时传入的view是Dialog的DecorView，而mParentWindow是Activity的PhoneWindow；
+这里需要注意的是和Activity在添加Window时不同，此时传入的view是Dialog的DecorView，而*mParentWindow是Activity的PhoneWindow*；
 
 ```
 // [CODE]android.app.WindowManagerGlobal

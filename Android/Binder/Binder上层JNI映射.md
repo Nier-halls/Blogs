@@ -12,7 +12,7 @@
 ## BinderProxy & BpBinder
 
 ### BinderProxy(BpBinder)的创建
-在Java层获取到的代理对象一般都是BinderProxy对象，如从Parcel中读取到的其它进程的Binder对象都是BinderProxy的实例；
+在Java层获取到的代理对象一般都是BinderProxy对象，例如从Parcel中读取到的其它进程的Binder对象都是BinderProxy的实例；
 
 BinderProxy上有这么一段注释
 ```
@@ -22,7 +22,7 @@ BinderProxy上有这么一段注释
  * directly from Java code.
  */
 ```
-意思是BinderProxy对象只能由Native层的javaObjectforIBinder方法来创建，不能通过Java层代码来直接创建；
+意思是BinderProxy对象只能由Native层的**javaObjectforIBinder**方法来创建，不能通过Java层代码来直接创建；
 
 这里用ServiceManager为例，通过Parcel获取一个远程的Binder代理对象，这个Binder代理对象由Native层对象转换成Java层BinderProxy对象的过程；
 ```
@@ -119,7 +119,7 @@ sp<IBinder> ProcessState::getStrongProxyForHandle(int32_t handle)
 参数handle可以理解为远程Binder对象的引用，Binder底层（驱动层）可以通过这个引用找到这个Binder对象所在的进程；
 ProcessState对象是进程单例，首先从ProcessState的缓存中查找是否存在一个Binder引用对应的Native层Binder对象也就是BpBinder，如果没有找到则创建了一个BpBinder，并且将handle引用号赋值给BpBinder；
 
-BpBinder就是native层或者说JNI层的Binder代理对象的映射了，我们可以用BpBinder发起跨进程请求，只要把handle引用号带上，Binder驱动层就可以根据这个引用号找对应进程的Binder服务对象让它来处理请求；
+BpBinder就是native层或者说JNI层的BinderProxy对象的映射了，我们可以用BpBinder发起跨进程请求，只要把handle引用号带上，Binder驱动层就可以根据这个引用号找对应进程的Binder服务对象让它来处理请求；
 
 这个BpBinder在进程单例ProcessState中有缓存，也就是说hanle引用号和BpBinder对象一一对应；
 
@@ -183,8 +183,9 @@ gBinderProxyOffsets结构体是一个全局变量，记录着Java层的BinderPro
 2. 调用Ixxx.stub.asInterface(IBinder)
 3. 通过返回的xxxProxy对象去调用约定好的接口方法
 
-这里获取的IBinder对象就是BinderProxy类的实例，而xxxProxy调用约定好的前接口请求只不过是拼装好参数最后通过BinderProxy发起跨进程请求，xxxProxy只是BinderProxy的一个代理类，拿ServiceManager举个例子：
+这里获取的IBinder对象就是BinderProxy类的实例，而xxxProxy调用约定好的接口方法，这些接口方法的实现只不过是拼装好参数通过BinderProxy发起跨进程请求，xxxProxy只是BinderProxy的一个代理类；
 
+这里拿ServiceManager举个例子：
 ```
     public IServiceManager asInterface(IBinder obj)
     {
@@ -209,7 +210,7 @@ gBinderProxyOffsets结构体是一个全局变量，记录着Java层的BinderPro
     }
 ```
 
-可以看出最后调用的就是`IBinder.transact()`，也就是`BinderProxy.transact()`，而`BinderProxy.transact()`最终会调用到JNI层的`android_os_BinderProxy_transact()`方法；
+可以看出最后调用的就是`IBinder.transact()`，也就是`BinderProxy.transact()`。而`BinderProxy.transact()`最终会调用到JNI层的`android_os_BinderProxy_transact()`方法；
 
 ```
 static jboolean android_os_BinderProxy_transact(JNIEnv* env, jobject obj,
@@ -230,12 +231,12 @@ static jboolean android_os_BinderProxy_transact(JNIEnv* env, jobject obj,
 ```
 方法首先将Java层的Parce转换成了native层的Parcel对象，接着从当前BinderProxy中的mObject字段中获取BpBinder的地址，然后赋值给target变量；最后利用BpBinder调用`transact`方法来发起真正的跨进程请求；
 
-从BinderProxy的创建和BinderProxy发起请求的逻辑都可以看出，BinderProxy只是BpBinder的一个Java层代理对象；
+从BinderProxy的创建和BinderProxy发起请求的逻辑都可以看出，BinderProxy只是BpBinder的一个Java层代理对象；整个层级关系应该是 xxxProxy(ServiceManagerProxy) -> BinderProxy -> BpBinder；
 
 
 ## Binder & BBinder
 ### Binder(BBinder)对象的创建
-不同于BinderProxy，Binder对象的创建一般都是在Java层完成的；而Binder对象为了能够为其它进程提供服务都会将自身写入Parcel传递给其它进程，例如最普遍的就是利用AIDL创建的xxx.Stub对象通过Service传递给其它组件，而这个Stub就是继承Binder类的一个对象；
+不同于BinderProxy，Binder对象的创建一般都是在Java层完成的；而Binder对象为了能够为其它进程提供服务一般会将自身写入Parcel对象中间接传递给其它进程，最常见的就是利用AIDL创建的xxx.Stub对象通过Service传递给其它组件，而这个Stub就是Binder类的一个子类；
 
 Binder类的构造方法中有一个init方法
 ```
@@ -244,7 +245,7 @@ Binder类的构造方法中有一个init方法
         ...
     }
 ```
-这个init方法对应的则是native方法`android_os_Binder_init`
+这个init方法对应的是native方法`android_os_Binder_init`
 ```
 static void android_os_Binder_init(JNIEnv* env, jobject obj)
 {
@@ -253,7 +254,6 @@ static void android_os_Binder_init(JNIEnv* env, jobject obj)
 }
 ```
 这里为Binder对象创建了JavaBBinderHolder对象；gBinderOffsets全局变量中记录着Java层Binder类的关键信息，通过记录的字段偏移量配合JNI赋值Binder中的`mObject`为JavaBBinderHolder对象的地址；而这个JavaBBinder则是JNI层Binder对象BBinder的封装类，一般可以通过`JavaBBinderHolder->get()`方法来获取到Java层Binder对应的JNI层`BBinder`对象
-
 
 ```
 class JavaBBinderHolder : public RefBase
@@ -286,10 +286,10 @@ public:
 ```
 在JavaBBinder构造的时候会保存Java层Binder对象的引用到mObject变量中，和BinderProxy的形式类似，Java层和JNI层的对应对象会进行相互引用；
 
-![DecorView](./pic/pic_binderproxy_struct.png)
+![DecorView](./pic/pic_bbinder_struct.png)
 
 ### Binder(BBinder)处理请求逻辑
-在Binder对象在将自己通过Parcel跨进程传递给其它进程提供服务时就会在Binder驱动层记录下Binder对象的引用，当其它进程通过Binder对象对应的BinderProxy发起请求时，Binder驱动会找到对应的Binder对象引用进行处理；
+Binder对象在将自己通过Parcel跨进程传递给其它进程提供服务时就会在Binder驱动层记录下Binder对象的引用，当其它进程通过Binder对象对应的BinderProxy发起请求时，Binder驱动会找到对应的Binder对象引用进行处理；
 
 通常App进程在启动时会在native层初始化去循环获取并且处理Binder请求（todo具体什么时候初始化需要再整理说明 `ZygoteConnection.processOneCommand()`）
 ```
@@ -391,7 +391,7 @@ virtual status_t onTransact(uint32_t code, const Parcel& data, Parcel* reply, ui
 ![DecorView](./pic/pic_bbinder_ontransact.png)
 
 #### Binder对象的一致性
-在尝试获取Binder远程代理时会从Binder底层返回handle时都会在单例ProcessState的缓存中查看是否含有BpBinder，而BpBinder中又持有BinderProxy的弱引用，因此当Binder底层返回同一个远程Binder的引用号时，ProcessState会尝试返回BpBinder的缓存，BpBinder的缓存会返回BinderProxy的弱引用，最后从弱引用中获取BinderProxy实例
+在尝试获取Binder远程代理时会从Binder底层返回handle时都会在单例ProcessState的缓存中查看是否含有BpBinder，而BpBinder中又持有BinderProxy的弱引用，因此当Binder底层返回同一个远程Binder的handle引用号时，ProcessState会尝试寻找并且返回缓存的BpBinder，BpBinder会返回BinderProxy的弱引用，最后从弱引用中获取BinderProxy实例;
 
 此时BinderProxy和BpBinder之间的映射关系可用下图概括：
 
@@ -403,6 +403,66 @@ virtual status_t onTransact(uint32_t code, const Parcel& data, Parcel* reply, ui
 
 在BinderProxy不会回收的情况下可以得到这么一个结论
 
-> BinderProxy(Client) -- BpBinder -- handle -- Binder(Server) 之间的关系是一一对应的；
+> BinderProxy(Client) -- BpBinder -- handle -- BBinder -- Binder 之间的关系是一一对应的；
 
-从这里就可以解释为什么App进程中的Activity可以和ActivityManagerService中的进程通过ActivityRecord.Token进程一一映射；
+从这里就可以解释为什么App进程中的Activity可以和ActivityManagerService中的进程通过ActivityRecord.Token完成进程间的映射；
+
+## Java层和JNI层的映射结构体
+在App进程创建的时候会通过`int_register_android_os_Binder`,`int_register_android_os_BinderProxy`分别记录Java层Binder和BinderProxy类的相关信息；
+
+### gBinderOffsets
+```
+const char* const kBinderPathName = "android/os/Binder";
+
+static int int_register_android_os_Binder(JNIEnv* env)
+{
+    // 通过JNI获取android.os.Binder类的jclass引用
+    jclass clazz = FindClassOrDie(env, kBinderPathName);
+
+    gBinderOffsets.mClass = MakeGlobalRefOrDie(env, clazz);
+
+    // 记录android.os.Binder.execTransact方法的偏移量，用于供底层回调上层Binder.onTransact方法
+    gBinderOffsets.mExecTransact = GetMethodIDOrDie(env, clazz, "execTransact", "(IJJI)Z");
+
+    // 记录android.os.Binder.mObject变量的偏移量，用于保存JavaBBinderHolder的偏移量
+    gBinderOffsets.mObject = GetFieldIDOrDie(env, clazz, "mObject", "J");
+
+    return RegisterMethodsOrDie(
+        env, kBinderPathName,
+        gBinderMethods, NELEM(gBinderMethods));
+}
+```
+
+### gBinderProxyOffsets
+```
+const char* const kBinderProxyPathName = "android/os/BinderProxy";
+
+static int int_register_android_os_BinderProxy(JNIEnv* env)
+{
+    jclass clazz = FindClassOrDie(env, "java/lang/Error");
+    gErrorOffsets.mClass = MakeGlobalRefOrDie(env, clazz);
+
+    // 记录android.os.Binder.BinderProxy类的jclass引用
+    clazz = FindClassOrDie(env, kBinderProxyPathName);
+    gBinderProxyOffsets.mClass = MakeGlobalRefOrDie(env, clazz);
+
+    // 记录android.os.Binder.BinderProxy的构造方法
+    gBinderProxyOffsets.mConstructor = GetMethodIDOrDie(env, clazz, "<init>", "()V");
+    gBinderProxyOffsets.mSendDeathNotice = GetStaticMethodIDOrDie(env, clazz, "sendDeathNotice",
+            "(Landroid/os/IBinder$DeathRecipient;)V");
+
+    // 记录android.os.Binder.BinderProxy.mObject变量偏移量，mObject用于保存BpBinder的地址
+    gBinderProxyOffsets.mObject = GetFieldIDOrDie(env, clazz, "mObject", "J");
+
+    // 记录android.os.Binder.BinderProxy.mSelf变量偏移量，mSelf是一个BinderProxy的弱引用
+    gBinderProxyOffsets.mSelf = GetFieldIDOrDie(env, clazz, "mSelf", "Ljava/lang/ref/WeakReference;");
+    gBinderProxyOffsets.mOrgue = GetFieldIDOrDie(env, clazz, "mOrgue", "J");
+
+    clazz = FindClassOrDie(env, "java/lang/Class");
+    gClassOffsets.mGetName = GetMethodIDOrDie(env, clazz, "getName", "()Ljava/lang/String;");
+
+    return RegisterMethodsOrDie(
+        env, kBinderProxyPathName,
+        gBinderProxyMethods, NELEM(gBinderProxyMethods));
+}
+```

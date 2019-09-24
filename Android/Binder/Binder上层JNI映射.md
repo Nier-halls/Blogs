@@ -7,6 +7,10 @@
 > * Binder & BBinder
 >   1. Binder的创建
 >   2. Binder(BBinder)处理请求逻辑
+> 
+> * Java层和JNI层的映射结构体
+>   1. gBinderOffsets
+>   2. gBinderProxyOffsets
 
 # 从Binder的Java层JNI对象映射分析Binder的跨进程请求逻辑
 ## BinderProxy & BpBinder
@@ -221,10 +225,12 @@ static jboolean android_os_BinderProxy_transact(JNIEnv* env, jobject obj,
 
     Parcel* reply = parcelForJavaObject(env, replyObj);
 
+    //从BinderProxy中读取mData字段的值（BpBinder的地址）
     IBinder* target = (IBinder*)
         env->GetLongField(obj, gBinderProxyOffsets.mObject);
     ...
 
+    //调用BpBinder->transact方法发起请求
     status_t err = target->transact(code, *data, reply, flags);
     ...
 }
@@ -236,9 +242,9 @@ static jboolean android_os_BinderProxy_transact(JNIEnv* env, jobject obj,
 
 ## Binder & BBinder
 ### Binder(BBinder)对象的创建
-不同于BinderProxy，Binder对象的创建一般都是在Java层完成的；而Binder对象为了能够为其它进程提供服务一般会将自身写入Parcel对象中间接传递给其它进程，最常见的就是利用AIDL创建的xxx.Stub对象通过Service传递给其它组件，而这个Stub就是Binder类的一个子类；
+不同于BinderProxy，Binder对象的创建一般都是在Java层完成的；而Binder对象为了能够为其它进程提供服务一般会将自身写入Parcel对象中间接传递给其它进程，最常见的就是利用AIDL创建的xxx.Stub对象通过Service传递给其它组件，而这个Stub就是Binder类的一个子类；在尝试将Binder写入Parcel传递到其它进程时Binder底层（驱动层）会为当前进程记录下这个Binder的Java层引用；
 
-Binder类的构造方法中有一个init方法
+首先来看Binder类的构造方法，方法中有一个init方法
 ```
     public Binder() {
         init();
@@ -253,7 +259,7 @@ static void android_os_Binder_init(JNIEnv* env, jobject obj)
     env->SetLongField(obj, gBinderOffsets.mObject, (jlong)jbh);
 }
 ```
-这里为Binder对象创建了JavaBBinderHolder对象；gBinderOffsets全局变量中记录着Java层Binder类的关键信息，通过记录的字段偏移量配合JNI赋值Binder中的`mObject`为JavaBBinderHolder对象的地址；而这个JavaBBinder则是JNI层Binder对象BBinder的封装类，一般可以通过`JavaBBinderHolder->get()`方法来获取到Java层Binder对应的JNI层`BBinder`对象
+这里为Binder对象创建了JavaBBinderHolder对象；gBinderOffsets全局变量中记录着Java层Binder类的关键信息，通过记录的字段偏移量配合JNI赋值`Binder.mObject`为JavaBBinderHolder对象的地址；而这个JavaBBinderHolder则是JNI层Binder对象BBinder的封装类，一般可以通过`JavaBBinderHolder->get()`方法来获取到`BBinder`对象，`BBinder`对象则对应着Java层Binder；
 
 ```
 class JavaBBinderHolder : public RefBase
@@ -270,7 +276,7 @@ public:
     }
 }    
 ```
-代码中的JavaBBinder则是BBinder的一个子类；
+代码中的JavaBBinder是BBinder的一个子类；
 
 ```
 class JavaBBinder : public BBinder
@@ -287,6 +293,8 @@ public:
 在JavaBBinder构造的时候会保存Java层Binder对象的引用到mObject变量中，和BinderProxy的形式类似，Java层和JNI层的对应对象会进行相互引用；
 
 ![DecorView](./pic/pic_bbinder_struct.png)
+
+总结一下，Binder类在Java层构造实例时同时会伴随着它在Native层映射对象JavaBBinder对象的创建，它们之间互相持有引用；
 
 ### Binder(BBinder)处理请求逻辑
 Binder对象在将自己通过Parcel跨进程传递给其它进程提供服务时就会在Binder驱动层记录下Binder对象的引用，当其它进程通过Binder对象对应的BinderProxy发起请求时，Binder驱动会找到对应的Binder对象引用进行处理；
@@ -397,9 +405,9 @@ virtual status_t onTransact(uint32_t code, const Parcel& data, Parcel* reply, ui
 
 ![DecorView](./pic/pic_bpbinder_map.png)
 
-只要Java层有强引用持有BinderProxy，BpBinder的弱引用持有的BinderProxy就不会回收；而BpBinder又和handle一一对应并且缓存在进程单例ProcessState中；
+只要Java层有强引用持有BinderProxy，BpBinder的弱引用持有的BinderProxy就不会回收；而BpBinder又和handle一一对应并且缓存在进程单例ProcessState中；因此同进程Java层获取到的同一个Binder的代理对象BinderProxy实例永远都会是同一个；
 
-另外BinderServer端在收到Binder对象的引用会在向其它进程发送Binder对象时被记录在驱动层，当收到请求时会从驱动层获取之前记录的Java层Binder对象地址还给上层来处理请求，因此BinderServer端获取到的IBinder对象也永远都是一个；
+另外BinderServer端在注册到ServiceManager或者将自己传递到目标进程时Binder对象会被记录在驱动层，当收到请求时驱动层会找出之前记录的Java层Binder对象地址还给上层来处理请求，因此BinderServer端获取到的Binder对象和其它进程的BinderProxy是存在对应关系的；（同一个Binder实例和当次获取到的BinderProxy是一一对应的，是实例层面上的对应而不是类层面上的对应）
 
 在BinderProxy不会回收的情况下可以得到这么一个结论
 

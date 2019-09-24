@@ -1,3 +1,4 @@
+# 从Binder的Java层JNI对象映射分析Binder的跨进程请求逻辑
 ## 提纲
 > * BinderProxy & BpBinder
 >   1. 获取BinderProxy —— BinderProxy的创建
@@ -12,7 +13,6 @@
 >   1. gBinderOffsets
 >   2. gBinderProxyOffsets
 
-# 从Binder的Java层JNI对象映射分析Binder的跨进程请求逻辑
 ## BinderProxy & BpBinder
 
 ### BinderProxy(BpBinder)的创建

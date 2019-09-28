@@ -4,19 +4,6 @@
 > * Binder整体流程概括
 > * 数据结构概括：`binder_transaction_data`、`binder_transaction`、`binder_proc`
 > * Binder流程步骤说明
->   1. 组装请求用`cmd` + `binder_transaction_data`
->   2. 调用Binder驱动层通讯函数ioctl，陷入内核层
->   3. 驱动层解析`binder_transaction_data`找到BinderServer进程`binder_proc`
->   4. 组装一个任务结构体`binder_transaction`加入到BinderServer进程任务队列中
->   5. 请求方进入阻塞状态等待BinderServer进程返回结果
->   6. BinderServer进程的其中一个线程唤醒并解析`binder_transaction`任务，组装`cmd` + `binder_transaction_data`返回给BinderServer的Native层
->   7. BinderServer从驱动层返回读取`binder_transaction_data`
->   8. 获取BBinder(JavaBBinder)调用Java层`Binder.onTransact`方法
->   9. 获取返回结果并且返回给驱动层
->   10. 找到阻塞等待唤醒的线程，组装`binder_transaction`分配到线程的任务队列中
->   11. BinderServer重新进入阻塞状态等待下次请求的到来
->   12. BinderClient被唤醒后解析`binder_transaction`任务，组装`cmd` + `binder_transaction_data`返回给BinderClient的Native层
->   13. 组装reply(Parcel)数据放回给上层
 > * Binder流程图
 > * Binder的线程管理
 >   1. 默认线程数
@@ -100,7 +87,7 @@ struct binder_buffer {
 
 这三个数据结构的关系如下：
 
-![DecorView](./pic/pic_binder_native_obj21.png)
+![DecorView](./pic/pic_binder_native_obj1.png)
 
 
 ### Binder流程步骤说明
@@ -298,4 +285,211 @@ static int binder_thread_read(struct binder_proc *proc,
 		return -EFAULT;
 }
 ```
-这一步主要是BinderServer收到任务后重新根据binder_transaction任务中的参数拼装成一个binder_transaction_data并复制到用户进程中去，让其去Java层处理这个任务，注意这里`tr.target.ptr`就是目标BinderServer对应的BBinder对象，里面保存着java层Binder的引用，是从Java层Binder->JavaBBinder->flat_binder_object->binder_node一步一步存到内核，然后又一步步的从内核返回给上层来处理任务；
+总结一下，BinderServer线程被唤醒后确定了`cmd=BR_TRANSACTION`并且封装了`binder_transaction_data`将这个数据写入到BinderServer在Native曾传入的`binder_write_read.read_buffer`中，注意这里`tr.target.ptr`就是目标BinderServer对应的BBinder对象，里面保存着java层Binder的引用，引用的流程是从Java层Binder->JavaBBinder->flat_binder_object->binder_node一步一步存到内核，然后又一步步的从内核返回给上层来处理任务；
+
+#### 7 BinderServer获取BBinder(JavaBBinder)处理请求
+
+```
+status_t IPCThreadState::executeCommand(int32_t cmd) {
+	switch ((uint32_t)cmd) {
+		case BR_TRANSACTION:
+        {
+			//读取驱动层返回的binder_transaction_data数据
+            binder_transaction_data tr;
+            result = mIn.read(&tr, sizeof(tr));
+           
+		    //将驱动层的数据读取并创建一个Parcel对象
+            Parcel buffer;
+            buffer.ipcSetDataReference(
+                reinterpret_cast<const uint8_t*>(tr.data.ptr.buffer),
+                tr.data_size,
+                reinterpret_cast<const binder_size_t*>(tr.data.ptr.offsets),
+                tr.offsets_size/sizeof(binder_size_t), freeBuffer, this);
+
+            Parcel reply;
+            status_t error;
+          
+            if (tr.target.ptr) {         
+                if (reinterpret_cast<RefBase::weakref_type*>(
+                        tr.target.ptr)->attemptIncStrong(this)) {
+
+					//取出cookie中保存的JavaBBinder引用调用transact方法
+					//接着调用Java层Binder.onTransact
+                    error = reinterpret_cast<BBinder*>(tr.cookie)->transact(tr.code, 
+						buffer, &reply, tr.flags);
+                    reinterpret_cast<BBinder*>(tr.cookie)->decStrong(this);
+                } else {
+                    error = UNKNOWN_TRANSACTION;
+                }
+
+            }
+			//将处理结果返回给BinderClient进程
+            sendReply(reply, 0);
+        }
+        break;
+	}
+}
+```
+BinderServer的Native层读取了驱动层返回的cmd以及binder_transaction_data数据后拼装成一个Parcel数据，取出Binder(JavaBBinder)引用间接通过`mObject`保存的java层Binder来调用`onTransact`方法来处理业务。处理完成后将结果写入到reply中返回给BinderClient端；
+
+#### 8 获取返回结果并且返回给驱动层
+```
+status_t IPCThreadState::sendReply(const Parcel& reply, uint32_t flags)
+{
+    status_t err;
+    status_t statusBuffer;
+    err = writeTransactionData(BC_REPLY, flags, -1, 0, reply, &statusBuffer);
+    if (err < NO_ERROR) return err;
+
+    return waitForResponse(NULL, NULL);
+}
+```
+之前处理完成后会调用`sendReply`方法，这里需要注意的是此时，因为是返回给请求的进程所以不需要指定请求Binder的handle引用号和请求的方法编号code；写入的数据全部分解存到`binder_transaction_data`中
+```
+	tr.data_size = data.ipcDataSize();
+	tr.data.ptr.buffer = data.ipcData();
+	tr.offsets_size = data.ipcObjectsCount()*sizeof(binder_size_t);
+	tr.data.ptr.offsets = data.ipcObjects();
+```
+最后通过ioctl方法将`BC_REPLY`和`binder_transaction_data`写入到`binder_write_read`中并去请求内核区的Binder驱动；
+
+#### 9 唤醒BinderClinet线程并返回结果
+```
+static void binder_transaction(struct binder_proc *proc,
+			       struct binder_thread *thread,
+			       struct binder_transaction_data *tr, int reply,
+			       binder_size_t extra_buffers_size)
+{
+	if (reply) {
+		//从BinderServer处理线程中保存的binder_transaction任务
+		in_reply_to = thread->transaction_stack;
+		
+		//找到BinderClient的请求线程
+		target_thread = in_reply_to->from;
+		//找到BinderClient的请求进程
+		target_proc = target_thread->proc;
+	}
+
+	if (target_thread) {
+		e->to_thread = target_thread->pid;
+		target_list = &target_thread->todo; //找到之前阻塞的BinderClient线程的任务列表
+		target_wait = &target_thread->wait; //找到之前阻塞的BinderClient线程的等待队列用于唤醒
+	}
+
+	//创建一个binder_transaction任务
+	struct binder_transaction *t;
+	t->to_proc = target_proc; 
+	t->to_thread = target_thread;
+	t->buffer->target_node = target_node; //这里是NULL，只有在请求时才会有值
+
+	//在BinderClient进程的mmap映射内存中申请一段内存用于写入BinderServer返回的数据
+	t->buffer = binder_alloc_buf(target_proc, tr->data_size,
+		tr->offsets_size, extra_buffers_size,
+		!reply && (t->flags & TF_ONE_WAY));
+
+	t->buffer->transaction = t;
+	t->buffer->target_node = target_node; //null
+
+	//将BinderServer返回的数据写入到BinderClinet的mmap映射内存中
+	if (copy_from_user_preempt_disabled(t->buffer->data, (const void __user *)(uintptr_t)
+			   tr->data.ptr.buffer, tr->data_size)) {
+		return_error = BR_FAILED_REPLY;
+		goto err_copy_data_failed;
+	}
+	t->work.type = BINDER_WORK_TRANSACTION;
+
+	//将任务添加到BinderClient所在的任务列表中
+	list_add_tail(&t->work.entry, target_list);
+	if (reply || !(t->flags & TF_ONE_WAY)) {
+
+		//唤醒之前等待请求结果阻塞的BinderClient线程
+		wake_up_interruptible_sync(target_wait);
+	}
+}
+```
+驱动从BinderServer处理线程的描述体`thread->transaction_stack`中获取到之前正在处理的任务然后获取到之前阻塞的BinderClinet线程，创建binder_transaction任务添加到BinderClient线程的任务队列中并且唤醒；此后BinderServer因队列中没有任务会在`binder_thread_read`函数中进入到阻塞状态，等待下次唤醒并处理任务；
+
+#### 10 BinderClient被唤醒返回结果到Native层
+```
+static int binder_thread_read(struct binder_proc *proc,
+			      struct binder_thread *thread,
+			      binder_uintptr_t binder_buffer, size_t size,
+			      binder_size_t *consumed, int non_block)
+{
+	//从此处唤醒（阻塞条件是thread->todo任务队列为空
+	//且thread->transaction_stack任务栈记录有正在处理的任务）
+	ret = wait_event_freezable(thread->wait, binder_has_thread_work(thread));
+
+	while (1) {
+		uint32_t cmd;
+		struct binder_transaction_data tr;
+		struct binder_work *w;
+		struct binder_transaction *t = NULL;
+
+	w = list_first_entry(&thread->todo, struct binder_work, entry);
+
+	switch (w->type) {
+		case BINDER_WORK_TRANSACTION: {
+			t = container_of(w, struct binder_transaction, work);
+		} break;
+	}
+
+	//这里是NULL到else块
+	if (t->buffer->target_node) {
+		...
+	} else {
+		tr.target.ptr = 0;
+		tr.cookie = 0;
+		cmd = BR_REPLY;
+	}
+
+	//下面重新将binder_transaction中的数据又拼回城binder_transaction_data
+	tr.data_size = t->buffer->data_size;
+	tr.offsets_size = t->buffer->offsets_size;
+	tr.data.ptr.buffer = (binder_uintptr_t)(
+				(uintptr_t)t->buffer->data +
+				proc->user_buffer_offset);
+	tr.data.ptr.offsets = tr.data.ptr.buffer +
+				ALIGN(t->buffer->data_size,
+					sizeof(void *));
+
+	//将cmd 和 binder_transaction_data数据写回到BinderClient传入的binder_write_read中去
+	if (put_user_preempt_disabled(cmd, (uint32_t __user *)ptr))
+		return -EFAULT;
+	if (copy_to_user_preempt_disabled(ptr, &tr, sizeof(tr)))
+		return -EFAULT;
+}	
+```
+BinderClient在之前等待返回结果时阻塞在`wait_event_freezable`函数中，此时被BinderServer线程唤醒来处理返回姐的`binder_transaction`任务，最后组装了一个cmd和`binder_transaction_data`返回给上层；需要注意的是因为是返回结果阶段，BinderServer在binder_thread_write阶段创建的binder_transaction中并没有target_node，因此这里确定返回的数据中`cmd=BR_REPLY`；
+
+
+#### 11 BinderClient的Native层读取返回结果
+```
+status_t IPCThreadState::waitForResponse(Parcel *reply, status_t *acquireResult)
+{
+
+	uint32_t cmd;
+
+    while (1) {
+        if ((err=talkWithDriver()) < NO_ERROR) break;
+
+        cmd = (uint32_t)mIn.readInt32();
+
+        switch (cmd) {
+			case BR_REPLY:
+				{
+					binder_transaction_data tr;
+					err = mIn.read(&tr, sizeof(tr));
+					//读取返回的数据重新组装reply（Parcel）对象
+					reply->ipcSetDataReference(
+						reinterpret_cast<const uint8_t*>(tr.data.ptr.buffer),
+						tr.data_size,
+						reinterpret_cast<const binder_size_t*>(tr.data.ptr.offsets),
+						tr.offsets_size/sizeof(binder_size_t),
+						freeBuffer, this);
+				}
+		}
+	}
+}
+```
+根据cmd处理返回的数据拼装成一个Parcel数据返回给Java层，至此一次Binder通讯过程完成；

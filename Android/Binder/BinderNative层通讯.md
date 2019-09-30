@@ -10,7 +10,7 @@
 >   2. 线程池扩充逻辑
 >   3. 线程阻塞唤醒逻辑以及优化
 
-这篇文章整理是针对大致走过一遍通讯流程的情况下整理的；目的是帮助自己在大致了解Binder通讯流程的情况下迅速回忆起里面的细节，为了方便自己阅读一些基础知识说明会被省略；
+这篇文章目的是帮助自己在大致了解Binder通讯流程的情况下迅速回忆起里面的细节，为了方便自己阅读一些基础知识说明会被省略；
 
 
 ### Binder整体流程概括
@@ -91,7 +91,7 @@ struct binder_buffer {
 
 这三个数据结构体的关系如下：
 
-![DecorView](./pic/pic_binder_native_obj1.png)
+![DecorView](./pic/pic_binder_native_obj2.png)
 
 
 ### Binder流程步骤说明
@@ -126,7 +126,7 @@ status_t IPCThreadState::writeTransactionData(int32_t cmd, uint32_t binderFlags,
 ```
 需要注意的是请求将BpBinder传递过来的handle引用号赋值给了binder_transaction_data.target.handle变量上，用于告诉驱动本次请求的BinderServer，方便驱动分配任务;
 
-#### 2 调用ioctl陷入内核层
+#### 2 调用ioctl进入内核层
 组装完成binder_transaction_data后会统一根据协议写入到binder_write_read结构体中
 ```
 status_t IPCThreadState::talkWithDriver(bool doReceive)
@@ -142,7 +142,7 @@ status_t IPCThreadState::talkWithDriver(bool doReceive)
 	...
 }
 ```
-这里将cmd和binder_transaction_data根据协议传给binder_write_read结构体接着调用ioctl进入内核态；
+这里将cmd和binder_transaction_data的地址根据协议传给binder_write_read结构体接着调用ioctl进入内核态；
 
 #### 3 驱动层解析binder_transaction_data，找到Server进程
 ```
@@ -257,7 +257,7 @@ static int binder_thread_read(struct binder_proc *proc,
 ```
 
 #### 6 BinderServer进程的其中一个线程唤醒并解析`binder_transaction`任务
-BinderServer的工作线程默认在没有任务的时候会通过wait_event_freezable_exclusive函数阻塞着等待任务的分配；
+BinderServer的工作线程默认在没有任务的时候会通过wait_event_freezable_exclusive函数阻塞着等待任务的分配；此时因为BinderClient线程提交了任务，所以进程中的其中一个工作线程将会被唤醒；
 ```
 static int binder_thread_read(struct binder_proc *proc,
 			      struct binder_thread *thread,
@@ -274,16 +274,17 @@ static int binder_thread_read(struct binder_proc *proc,
 			w = list_first_entry(&proc->todo, struct binder_work, entry);
 
 	switch (w->type) {
-		//BinderClient添加的任务类型是BINDER_WORK_TRANSACTION
+		//之前BinderClient添加的任务类型是BINDER_WORK_TRANSACTION
 		case BINDER_WORK_TRANSACTION: {
 			//从entry中重新获取到加入的binder_transaction
 			t = container_of(w, struct binder_transaction, work);
 		} break;
 	}	
 
-	//检查是否有目标BinderServer节点，有就说明是请求时BinderServer处理的任务
-	//没有就说明是BinderClient线程被唤醒时用于返回数据的任务
-	//因此这里返回的cmd就是BR_TRANSACTION
+	//检查是否有目标BinderServer节点，
+	//如果有就说明是请求时BinderServer处理的任务
+	//如果没有就说明是BinderClient线程被唤醒时用于返回数据的任务
+	//当前是在请求处理阶段，所以这里的cmd就是BR_TRANSACTION
 	if (t->buffer->target_node) {
 		//开始拼装给BinderServer进程用的binder_transaction_data数据体
 		struct binder_node *target_node = t->buffer->target_node;
@@ -361,7 +362,7 @@ status_t IPCThreadState::executeCommand(int32_t cmd) {
 	}
 }
 ```
-BinderServer从内核态返回到用户态在Native层读取了驱动层返回的cmd以及binder_transaction_data数据后拼装成一个Parcel数据，取出Binder(JavaBBinder)引用间接通过`mObject`保存的java层Binder来调用`onTransact`方法来处理业务。处理完成后将结果写入到reply中然后再通过驱动将结果返回给BinderClient
+BinderServer从内核态返回到用户态在Native层读取了驱动层返回的cmd以及binder_transaction_data数据后拼装成一个Parcel数据，取出Binder(JavaBBinder)引用间接通过`mObject`保存的java层Binder来调用`onTransact`方法来处理业务。处理完成后将结果写入到reply中然后再通过驱动（调用sendReply方法）将结果返回给BinderClient
 
 #### 8 获取返回结果并且返回给驱动层
 ```
@@ -375,14 +376,14 @@ status_t IPCThreadState::sendReply(const Parcel& reply, uint32_t flags)
     return waitForResponse(NULL, NULL);
 }
 ```
-之前处理完成后会调用`sendReply`方法，这里需要注意的是此时，因为是返回给请求的进程所以不需要指定请求Binder的handle引用号和请求的方法编号coded的；写入的数据全部分解存到`binder_transaction_data`中
+之前处理完成后会调用`sendReply`方法，这里需要注意的是此时，因为是返回给请求的进程所以不需要指定请求Binder的handle引用号和请求的方法编号code的；写入的数据（Parcel）全部分解存到`binder_transaction_data`中
 ```
 	tr.data_size = data.ipcDataSize();
 	tr.data.ptr.buffer = data.ipcData();
 	tr.offsets_size = data.ipcObjectsCount()*sizeof(binder_size_t);
 	tr.data.ptr.offsets = data.ipcObjects();
 ```
-最后通过ioctl方法将`BC_REPLY`和`binder_transaction_data`写入到`binder_write_read`中并去请求内核区的Binder驱动；
+最后通过ioctl方法将`BC_REPLY`和`binder_transaction_data`写入到`binder_write_read`中并去请求Binder驱动；
 
 #### 9 唤醒BinderClinet线程并返回结果
 ```
@@ -391,6 +392,7 @@ static void binder_transaction(struct binder_proc *proc,
 			       struct binder_transaction_data *tr, int reply,
 			       binder_size_t extra_buffers_size)
 {
+	//此时是BC_REPLY
 	if (reply) {
 		//从BinderServer处理线程中保存的binder_transaction任务
 		in_reply_to = thread->transaction_stack;
@@ -595,7 +597,7 @@ static void binder_transaction(struct binder_proc *proc,
 
 ![DecorView](./pic/pic_binder_transaction_data.png)
 
-这里先读取存储的数据，也就是图里的`data_size`长度的这块数据，而这块数据中灰色部分就是代表缓存的`flat_binder_object`，而想要把这些`flat_binder_object`从数据中找出来就需要通过后面的偏移量数组了；
+这里先读取存储的数据，也就是图里的`data_size`长度的这块数据，而这块数据中黑色部分就是代表缓存的`flat_binder_object`，而想要把这些`flat_binder_object`从数据中找出来就需要通过后面的偏移量数组了；
 
 这个偏移量数组（`offsets_size`长度标记的数据块）中记录着每个`flat_binder_object`的位置，通过这个数组中记录的位置就可以把数据中的binder类型数据挑选出来；
 
@@ -786,7 +788,7 @@ static int open_driver(const char *driver)
 总结：App进程在完成fork后执行ActivityThread的main方法之前会进行一次初始化，在初始化过程中会对当前进程的ProcessState进行配置，Binder的最大处理线程数默认配置是15个；
 
 #### 线程池扩充逻辑
-Binder驱动中开始一般不会创建最大值（默认15个）的线程数来阻塞等待任务的分配，当需要扩充等待分配任务的线程时一般都是通过驱动来告诉上层创建线程然后请求驱动阻塞来等待任务的分配；而检查是否需要增加线程是驱动中每次BinderServer线程获取到任务准备返回处理时（也就是每次消耗了一个空闲线程时），具体位置是在`binder_thread_read`函数中，代码逻辑如下
+Binder驱动中开始一般不会创建最大值（默认15个）的线程数来阻塞等待任务的分配，当需要扩充等待分配任务的线程时会通过驱动来告诉上层创建线程然后请求驱动阻塞来等待任务的分配；而检查是否需要增加线程的触发点是驱动中每次BinderServer线程获取到任务准备返回处理时（也就是每次消耗了一个空闲线程时），具体位置是在`binder_thread_read`函数中，代码逻辑如下
 ```
 static int binder_thread_read(struct binder_proc *proc,
 			      struct binder_thread *thread,
@@ -821,7 +823,7 @@ static int binder_thread_read(struct binder_proc *proc,
 ##### 3. thread->looper & (BINDER_LOOPER_STATE_REGISTERED |BINDER_LOOPER_STATE_ENTERED)
 一般进程打开Binder驱动并且初始化完成就会依次进入这两个状态
 
-在判断确定需要扩充线程池的线程时就会向返回的任务中多加一个命令`BR_SPAWN_LOOPER`
+在判断确定需要扩充线程池的线程时就会向返回的任务中多加一个命令`BR_SPAWN_LOOPER`，当上层获取到了这个命令后会去创建线程来尝试获取新的请求任务
 
 ```
 status_t IPCThreadState::waitForResponse(Parcel *reply, status_t *acquireResult)
@@ -893,5 +895,180 @@ void IPCThreadState::joinThreadPool(bool isMain)
 }
 ```
 `IPCThreadState::joinThreadPool`函数会重新去调用`ioctl`去尝试获取Binder驱动分配给进程的任务，如果没有任务就会阻塞在驱动层`binder_thread_read`函数中；
+```
+void IPCThreadState::joinThreadPool(bool isMain)
+{
+    status_t result;
+    do {
+        result = getAndExecuteCommand();
+		...
+    } while (result != -ECONNREFUSED && result != -EBADF);
+	...
+}
+```
+```
+status_t IPCThreadState::getAndExecuteCommand()
+{
+    status_t result;
+    int32_t cmd;
+	//通过ioctl请求Binder驱动
+    result = talkWithDriver();
+    if (result >= NO_ERROR) {
+		//读取cmd命令
+        cmd = mIn.readInt32();
+		//解析处理
+        result = executeCommand(cmd);
+    }
+    return result;
+}
+```
+此时可以说没有要请求的任务，却又读取数据的需求
+```
+status_t IPCThreadState::talkWithDriver(bool doReceive)
+{
+    binder_write_read bwr;
 
-#### 线程阻塞唤醒逻辑以及优化
+    //mIn.dataPosition()代表已经读取的数据，目前没有数据所以是0，mIn.dataSize()因为没有数据所以也是0
+    const bool needRead = mIn.dataPosition() >= mIn.dataSize();
+    const size_t outAvail = (!doReceive || needRead) ? mOut.dataSize() : 0;
+
+    bwr.write_size = outAvail;//因为没有数据所以这里mOut.dataSize()是0
+    bwr.write_buffer = (uintptr_t)mOut.data();
+
+    // 根据函数声明可以知道doReceive默认为true，needRead根据上面判断也是true
+    if (doReceive && needRead) {
+		//mIn.dataCapacity()的值默认是256
+        bwr.read_size = mIn.dataCapacity();
+		//mIn的数据存放地址
+        bwr.read_buffer = (uintptr_t)mIn.data();
+    } else {
+        ...
+    }
+    status_t err;
+    do {
+		//和Binder驱动通讯
+        if (ioctl(mProcess->mDriverFD, BINDER_WRITE_READ, &bwr) >= 0)
+            err = NO_ERROR;
+    } while (err == -EINTR);
+	...
+    return err;
+}
+```
+此时注意只有`bwr.read_size`是不为0的，意思是尝试读取数据;和Binder通讯时传入的协议编号是`BINDER_WRITE_READ`
+```
+static long binder_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+{
+	switch (cmd) {
+		case BINDER_WRITE_READ: {
+			//这里bwr.write_size=0不会进入
+			if (bwr.write_size > 0) {
+				ret = binder_thread_write(proc, thread, bwr.write_buffer, bwr.write_size, &bwr.write_consumed);
+			}
+			//bwr.read_size的值时256
+			if (bwr.read_size > 0) {
+				ret = binder_thread_read(proc, thread, bwr.read_buffer, bwr.read_size, &bwr.read_consumed, filp->f_flags & O_NONBLOCK);
+			}
+			break;
+		}
+	}		
+	...
+}
+```
+```
+static int binder_thread_read(struct binder_proc *proc,
+			      struct binder_thread *thread,
+			      binder_uintptr_t binder_buffer, size_t size,
+			      binder_size_t *consumed, int non_block)
+{
+	//检查当前进入驱动的线程是否有正在处理的任务，第一次进入必然时没有的
+	//检查是否有未处理的任务在线程的任务队列中排队，一样也是没有的
+	//所以wait_for_proc_work的值是true
+	wait_for_proc_work = thread->transaction_stack == NULL &&
+			list_empty(&thread->todo);
+
+	if (wait_for_proc_work)
+		//标记空闲线程数加+1
+		proc->ready_threads++;
+
+	if (wait_for_proc_work) {
+		//阻塞当前线程，阻塞条件是判断进程的任务队列中没有任务就阻塞，否在继续处理
+		ret = wait_event_freezable_exclusive(proc->wait, binder_has_proc_work(proc, thread));
+	}
+}
+```
+可以总结一下当线程被创建后会进入一个死循环去尝试读取驱动为进程分配的任务，如果没有任务则会阻塞等待驱动返回任务；
+
+#### Binder线程优化
+在当进程A向进程B发起请求希望B进程处理一些任务，但是任务中有一步还需要进程A中的一个BinderServer服务来处理（一个进程中可以包含多个BinderServer服务，如最常见的SystemServer进程），此时进程B又需要向进程A发起请求；假设这种情况出现两次
+
+1. 进程A 请求 进程B： A1线程阻塞  B1线程唤醒
+2. 进程B 请求 进程A： B1线程阻塞  A2线程唤醒
+3. 进程A 请求 进程B： A2线程阻塞  B2线程唤醒
+4. 进程B 请求 进程A： B2线程阻塞  A3线程唤醒
+
+如果正常情况不做处理上述流程下来会有5个线程会参与进来，其中A1、B1、A2、B2线程会阻塞，等A3处理完成后才会逐个按顺序唤醒B2、A2、B1、A1线程；而面对这一流程A2、B2、A3线程起始都是多余的，完全可以复用A1和B1线程来代替，只要在A1线程和B1线程中都加入两个任务栈，用来记录当前的任务关联就可以了；
+
+如果在复用线程的情况下上述流程会变成这样
+
+1. 进程A 请求 进程B： A1线程阻塞  B1线程唤醒
+2. 进程B 请求 进程A： B1线程阻塞  A1线程唤醒
+3. 进程A 请求 进程B： A1线程阻塞  B1线程唤醒
+4. 进程B 请求 进程A： B1线程阻塞  A1线程唤醒
+
+Binder驱动通过在`binder_transaction`任务中维护着一个链表来说明进程中线程正在处理的任务关系，从而完成这一线程复用的优化工作的；在Binder某个线程发起请求过程中在`binder_transaction`函数有这么一段逻辑
+```
+	//BinderClient请求线程中 binder_transaction函数
+	//t是为当前请求创建的binder_transaction任务
+	t->from_parent = thread->transaction_stack;
+	thread->transaction_stack = t;
+```
+这里将BinderClient线程当前拥有的`binder_transaction`任务赋值给新`binder_transaction->from_parent`变量上，然后BinderClient线程重新持有新的`binder_transaction`；而这个新的`binder_transaction`最后会被交给目标BinderServer的线程；
+
+```
+	//BinderServer处理线程 binder_thread_read函数
+	//t是为当前请求创建的binder_transaction任务
+	t->to_parent = thread->transaction_stack;
+	t->to_thread = thread;
+	thread->transaction_stack = t;
+```
+这里是BinderServer唤醒后也会有类似的处理逻辑，BinderServer当前如果有任务则会将任务暂存的新`binder_transact->to_parent`中，然后BinderServer线程重新持有新的`binder_transaction`;
+
+
+用上面的例子来说明就是
+* A1线程向B1发起了请求创建了binder_transaction1
+* A1.transaction_stack = binder_transaction1
+* B1.transaction_stack = binder_transaction1
+* binder_transaction1.from_paraent = * A1->transaction_stack
+* binder_transaction1.to_parent = * B1->transaction_stack
+
+这里from_paraent和to_parent两个变量比较难理解，这里分开说明
+
+* **binder_transaction1.from_paraent** ：负责组成一个任务依赖链，而在这条链上的阻塞线程都是可以被复用的；
+* **binder_transaction1.to_parent** ：变量可以理解成一个用于暂存正在请求等待唤醒的一个任务，暂存完就可以开始处理当前任务，处理完成可以利用这个字段找回之前的任务；
+
+整个请求关系可以看如下图:
+![DecorView](./pic/pic_binder_transaction.png)
+
+这一块复用逻辑在`binder_transaction`函数中确定唤醒线程的一块逻辑中体现
+```
+static void binder_transaction(struct binder_proc *proc,
+			       struct binder_thread *thread,
+			       struct binder_transaction_data *tr, int reply)
+{
+		if (!(tr->flags & TF_ONE_WAY) && thread->transaction_stack) {
+			struct binder_transaction *tmp;
+			tmp = thread->transaction_stack;
+			//循环找到最早阻塞的可复用线程
+			while (tmp) {
+				//from变量指创建binder_transaction的线程，也就是请求线程
+				if (tmp->from && tmp->from->proc == target_proc)
+					//如果当前请求的任务目标进程和档期那任务依赖的任务属于同一个进程，则赋值标记未目标进程
+					target_thread = tmp->from;
+				tmp = tmp->from_parent;
+			}
+		}
+}
+```
+此代码会循环查早一个阻塞的线程，这个线程满足以下要求：
+
+当前需要请求的进程和线程正在处理的任务来自的进程是同一个，如A1线程给B1线程创建了一个binder_transaction1任务，B1如果又需要请求A1进程，这时就会检查`thread->transaction_stack`也就是binder_transaction1任务的创建线程A1对应的进程和这次需要请求的进程是否是同一个，这里情况就是同一个，因此就会进行A1线程的复用；

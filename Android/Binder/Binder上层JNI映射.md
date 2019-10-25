@@ -133,7 +133,7 @@ BpBinder就是native层或者说JNI层的BinderProxy对象的映射了，我们�
 jobject javaObjectForIBinder(JNIEnv* env, const sp<IBinder>& val)
 {
     ...
-    //尝试从BpBinder中招是否存在BinderProxy对象
+    //尝试从BpBinder中招是否存在BinderProxy对象，如果是新创建的一般是没有的
     jobject object = (jobject)val->findObject(&gBinderProxyOffsets);
     if (object != NULL) {
         jobject res = jniGetReferent(env, object);
@@ -259,7 +259,7 @@ static void android_os_Binder_init(JNIEnv* env, jobject obj)
     env->SetLongField(obj, gBinderOffsets.mObject, (jlong)jbh);
 }
 ```
-这里为Binder对象创建了JavaBBinderHolder对象；gBinderOffsets全局变量中记录着Java层Binder类的关键信息，通过记录的字段偏移量配合JNI赋值`Binder.mObject`为JavaBBinderHolder对象的地址；而这个JavaBBinderHolder则是JNI层Binder对象BBinder的封装类，一般可以通过`JavaBBinderHolder->get()`方法来获取到`BBinder`对象，`BBinder`对象则对应着Java层Binder；
+这里为Binder对象创建了JavaBBinderHolder对象；gBinderOffsets全局变量中记录着Java层Binder类的关键信息，通过记录的字段偏移量配合JNI赋值`Binder.mObject`为JavaBBinderHolder对象的地址；而这个JavaBBinderHolder则是JNI层Binder对象BBinder的封装类，一般可以通过`JavaBBinderHolder->get()`方法来获取到`BBinder`对象，`BBinder`对象则对应着Java层Binder，JavaBBinderHolder类似于一个单例；
 
 ```
 class JavaBBinderHolder : public RefBase
@@ -297,7 +297,7 @@ public:
 总结一下，Binder类在Java层构造实例时同时会伴随着它在Native层映射对象JavaBBinder对象的创建，它们之间互相持有引用；
 
 ### Binder(BBinder)处理请求逻辑
-Binder对象在将自己通过Parcel跨进程传递给其它进程提供服务时就会在Binder驱动层记录下Binder对象的引用，当其它进程通过Binder对象对应的BinderProxy发起请求时，Binder驱动会找到对应的Binder对象引用进行处理；
+Binder对象在将自己通过Parcel跨进程传递给其它进程提供服务时就会在Binder驱动层记录下Binder对象的引用（binder_node），当其它进程通过Binder对象对应的BinderProxy发起请求时，Binder驱动会找到对应的Binder对象引用进行处理；
 
 通常App进程在启动时会在native层初始化去循环获取并且处理Binder请求（todo具体什么时候初始化需要再整理说明 `ZygoteConnection.processOneCommand()`）
 ```
@@ -399,13 +399,14 @@ virtual status_t onTransact(uint32_t code, const Parcel& data, Parcel* reply, ui
 ![DecorView](./pic/pic_bbinder_ontransact.png)
 
 #### Binder对象的一致性
+从上面看BinderProxy是创建的，并且是弱引用，怎么保证每次都能获取到同一个BinderProxy呢？
 在尝试获取Binder远程代理时会从Binder底层返回handle时都会在单例ProcessState的缓存中查看是否含有BpBinder，而BpBinder中又持有BinderProxy的弱引用，因此当Binder底层返回同一个远程Binder的handle引用号时，ProcessState会尝试寻找并且返回缓存的BpBinder，BpBinder会返回BinderProxy的弱引用，最后从弱引用中获取BinderProxy实例;
 
 此时BinderProxy和BpBinder之间的映射关系可用下图概括：
 
 ![DecorView](./pic/pic_bpbinder_map.png)
 
-只要Java层有强引用持有BinderProxy，BpBinder的弱引用持有的BinderProxy就不会回收；而BpBinder又和handle一一对应并且缓存在进程单例ProcessState中；因此同进程Java层获取到的同一个Binder的代理对象BinderProxy实例永远都会是同一个；
+只要Java层有强引用持有BinderProxy（一般作为Key被Map持有），BpBinder的弱引用持有的BinderProxy就不会回收；而BpBinder又和handle一一对应并且缓存在进程单例ProcessState中；因此同进程Java层获取到的同一个Binder的代理对象BinderProxy实例永远都会是同一个；
 
 另外BinderServer端在注册到ServiceManager或者将自己传递到目标进程时Binder对象会被记录在驱动层，当收到请求时驱动层会找出之前记录的Java层Binder对象地址还给上层来处理请求，因此BinderServer端获取到的Binder对象和其它进程的BinderProxy是存在对应关系的；（同一个Binder实例和当次获取到的BinderProxy是一一对应的，是实例层面上的对应而不是类层面上的对应）
 

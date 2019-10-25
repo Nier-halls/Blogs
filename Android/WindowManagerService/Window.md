@@ -19,7 +19,7 @@
 
 ### 1. Activity中与Winow相关的生命周期图
 
-![wms](./pic/wms_pic2.png)
+![wms](./pic/wms_create.png)
 
 具体Window相关的步骤发生的生命周期就是这三个，第三个onResume严格的说应该是执行完onResume回调后进行的操作。
 

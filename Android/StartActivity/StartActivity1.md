@@ -112,7 +112,7 @@ Activity执行startActivity方法最终会跨进程调用ActivityManagerService�
                 ...
     }
 ```
-AMS会调用PackageManagerService来解析Intent中的数据，其中包括带启动Activity的信息以及Manifes中对应的配置，解析完Itent并且获得对应Activity信息后就开始准备创建ActivitRecord；
+AMS会调用PackageManagerService来解析Intent中的数据，其中包括待启动Activity的信息以及Manifes中对应的配置，解析完Intent并且获得对应Activity信息后就开始准备创建ActivitRecord；
 
 #### 3.2.2 创建ActivityRecord
 ```
@@ -134,7 +134,7 @@ AMS会调用PackageManagerService来解析Intent中的数据，其中包括带�
     }
 ```
 
-Activity类是作为Application端也就是Client端展现的形式，而对应在AMS中Activity则是以ActivityRecord类的形式展现，ActivityRecord可以理解为Application中Activity的映射。
+Activity类是作为Application端也就是Client端展现的形式，而对应在AMS中Activity则是以ActivityRecord类的形式展现，**ActivityRecord可以理解为Application中Activity的映射**。
 
 Application中的Activity和AMS中的ActivityRecord是一一对应的关系。
 
@@ -183,14 +183,14 @@ ActivityRecord findActivityLocked(Intent intent, ActivityInfo info,
     return null;
 }
 ```
-上面是一个ActivityStack类中的其中一个查找Activity的方法，从方法中可以看出ActivityStack想要找到指定的Activity需要先遍历Stack中的所有Task（ActivityStack.mTaskHistory）,然后再从栈中获取所有Activity（TaskRecord.mActivities）。从上述方法可以看出ActivityStack在管理Activity的形式并非是直接管理的。
+上面是一个ActivityStack类中的其中一个查找Activity的方法，从方法中可以看出ActivityStack想要找到指定的Activity需要先遍历Stack中的所有Task（ActivityStack.mTaskHistory）,然后再从栈中获取所有Activity（TaskRecord.mActivities）。从上述方法可以看出ActivityStack在管理Activity的形式**并非是直接管理**的。
 
 ##### Task TaskRecor
 Task在Android中是直接管理Activity的容器，Task秉承Activity先进先出的顺序，是ActivityStack的具体细节体现。TaskRecor则是描述Task抽象概念的一个具体实现类。
 
 Activity在被压入Task时虽然遵循FIFO原则但并非只是一个一个压入一个一个弹出，根据Activity不同的启动模式（LaunchMode）可以定制Activity在Task中的行为，如单例（SingTask），单例单栈（SingInstance）等。
 
-Activity不能脱离Task存在，任何一个Activity都会被放置在一个Task中，默认放置在启动者相同的栈中。
+Activity不能脱离Task存在，任何一个Activity都会被放置在一个Task中，默认(affinity)放置在启动者相同的栈中。
 
 ##### Task & Stack & Activity 关系
 ![StartActivit](./pic/start_activity2.png)

@@ -55,8 +55,9 @@ public boolean dispatchTouchEvent(MotionEvent ev) {
 为什么设置两个这两个条件：
 1. actionMasked == MotionEvent.ACTION_DOWN：代表分发流程到开始，初次分发
 2. mFirstTouchTarget != null：代表非初次分发，且非ViewGroup自己处理到情况
+3. 子View没有设置“不允许父View拦截”标志位
 
-上述两个条件都是为了保证在事件分发的过程你各种功能，因此可知拦截的关键就是**必须在分发到流程中**
+上述三个个条件((条件1 || 条件2)&& 条件3)成立会让父View来判断是否进行拦截；这个就是拦截的初步判断逻辑；
 
 #### 条件一：TouchTarget != null + MotionEvent.ACTION_DOWN
 ```

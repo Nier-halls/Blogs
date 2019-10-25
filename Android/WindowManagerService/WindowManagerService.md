@@ -11,6 +11,12 @@
 >   2. Token的映射逻辑
 >   3. Window的分组逻辑
 
+## 关键点
+1. ViewRootImpl扮演的角色
+2. App和WindowManager通讯的手段
+3. ViewRootImpl创建的时期，以及特殊意义（主线程修改ui）
+4. Activity的Window及子Window分组的关键，分组依据（AMS 和 getWindowManager）
+5. Activity DecorView的结构
 
 ## Widnow相关概念
 ### PhoneWindow
@@ -216,10 +222,10 @@ App端方法的Binder对象，因为Binder具有跨进程保证唯一性的特�
 ### Window添加流程中涉及到的Token介绍
 基于Binder对象在多进程中能保证唯一性的特点，在Window添加过程中包括Activity的添加过程中多处都使用了Token，这个Token的实例是ActivityRecord的内部类Token的实例，在Activity添加成功后会传递给ActivityThread，接着这个Token会分别传递给ActivityClientRecord，Activity和Window来作为标记对应Activity的唯一标识；
 
-![Window 各部分创建生命周期](./pic/wms_token1.png)
+![Window token](./pic/wms_token1.png)
 
 ### Window分组逻辑
-Android中Window是分组存在的相同的，如Activity中要显示一个Dialog，Dialog也是一个Window，此时Dialog的父Window就是Activity的PhoneWindow。WindowManagerService在添加时会把这种相关联的Window分在一组里面，父Window如果被Romove来子Window也会一并被移除；
+Android中Window之间是存在分组关系的，如Activity中要显示一个Dialog，Dialog也是一个Window，此时Dialog的父Window就是Activity的PhoneWindow。WindowManagerService在添加时会把这种相关联的Window分在一组里面，父Window如果被Romove来子Window也会一并被移除；
 
 这里举例要在Activity中显示一个AlertDialog，在创建AlertDialog时同样会创建一个对应的Window用来管理Dialog的界面。
 ```
